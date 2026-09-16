@@ -1,0 +1,64 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environment ---
+.venv/
+venv/
+env/
+
+# --- Environment / secrets ---
+.env
+.env.local
+*.key
+
+# --- Runtime data ---
+data/
+!data/
+!data/.gitkeep
+
+# Canonical synthetic dataset + evaluation ground truth
+!data/sample_docs/
+!data/sample_docs/**
+!data/ground_truth/
+!data/ground_truth/**
+
+# Keep generated/runtime artifacts ignored
+data/generated/
+data/db/
+data/vectors/
+data/graphs/
+data/exports/
+data/processed/
+data/evaluation/
+# Keep the generator + fixtures themselves in version control;
+# generated HLD PDFs, DBs, vector stores and exports are build artifacts.
+data/generated/
+data/db/
+data/vectors/
+data/graphs/
+data/exports/
+data/processed/
+data/evaluation/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Streamlit ---
+.streamlit/secrets.toml
+
+# --- Freebuff ---
+.freebuff/

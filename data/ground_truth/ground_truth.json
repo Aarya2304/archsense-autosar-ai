@@ -1,0 +1,3280 @@
+{
+  "dataset": {
+    "name": "ABC synthetic HLD corpus",
+    "disclaimer": "SYNTHETIC SAMPLE \u2014 NOT A REAL PROGRAM DOCUMENT",
+    "v1_pdf": "ABC_HLD_v1.0.0.pdf",
+    "v2_pdf": "ABC_HLD_v1.1.0.pdf",
+    "v1_version": "1.0.0",
+    "v2_version": "1.1.0"
+  },
+  "page_index": {
+    "v1": {
+      "0": 1,
+      "1": 2,
+      "1.1": 2,
+      "1.2": 2,
+      "1.3": 2,
+      "1.4": 2,
+      "1.5": 2,
+      "2": 3,
+      "3": 4,
+      "3.1": 4,
+      "3.2": 4,
+      "3.2.1": 4,
+      "3.2.2": 5,
+      "3.2.3": 5,
+      "3.2.4": 5,
+      "3.2.5": 5,
+      "3.2.6": 5,
+      "3.2.7": 6,
+      "3.2.8": 6,
+      "3.2.9": 6,
+      "3.2.10": 6,
+      "3.2.11": 6,
+      "3.2.12": 7,
+      "3.2.13": 7,
+      "3.2.14": 7,
+      "3.2.15": 7,
+      "3.2.16": 7,
+      "3.2.17": 7,
+      "3.2.18": 7,
+      "3.2.19": 7,
+      "3.2.20": 8,
+      "4": 9,
+      "4.1": 9,
+      "4.2": 9,
+      "4.3": 9,
+      "4.4": 9,
+      "4.5": 9,
+      "4.6": 9,
+      "4.7": 9,
+      "4.8": 9,
+      "4.9": 10,
+      "4.10": 10,
+      "4.11": 10,
+      "4.12": 10,
+      "4.13": 10,
+      "4.14": 10,
+      "4.15": 10,
+      "4.16": 11,
+      "4.17": 11,
+      "4.18": 11,
+      "4.19": 11,
+      "4.20": 11,
+      "4.21": 11,
+      "4.22": 11,
+      "4.23": 11,
+      "4.24": 11,
+      "4.25": 12,
+      "5": 13,
+      "6": 14,
+      "6.1": 14,
+      "6.2": 14,
+      "6.2.1": 14,
+      "6.2.2": 14,
+      "6.2.3": 14,
+      "6.2.4": 15,
+      "6.2.5": 15,
+      "6.2.6": 15,
+      "6.2.7": 15,
+      "6.2.8": 15,
+      "6.2.9": 15,
+      "6.2.10": 15,
+      "6.2.11": 15,
+      "6.2.12": 15,
+      "6.2.13": 15,
+      "6.2.14": 15,
+      "6.2.15": 15,
+      "6.2.16": 15,
+      "6.2.17": 15,
+      "6.2.18": 15,
+      "6.2.19": 16,
+      "6.2.20": 16,
+      "6.2.21": 16,
+      "6.2.22": 16,
+      "6.2.23": 16,
+      "6.2.24": 16,
+      "7": 17,
+      "7.1": 17,
+      "7.2": 17,
+      "7.3": 17,
+      "7.4": 17,
+      "7.5": 17,
+      "8": 18,
+      "8.1": 18,
+      "8.2": 18
+    },
+    "v2": {
+      "0": 1,
+      "1": 2,
+      "1.1": 2,
+      "1.2": 2,
+      "1.3": 2,
+      "1.4": 2,
+      "1.5": 2,
+      "2": 3,
+      "3": 4,
+      "3.1": 4,
+      "3.2": 4,
+      "3.2.1": 4,
+      "3.2.2": 5,
+      "3.2.3": 5,
+      "3.2.4": 5,
+      "3.2.5": 5,
+      "3.2.6": 5,
+      "3.2.7": 6,
+      "3.2.8": 6,
+      "3.2.9": 6,
+      "3.2.10": 6,
+      "3.2.11": 6,
+      "3.2.12": 6,
+      "3.2.13": 7,
+      "3.2.14": 7,
+      "3.2.15": 7,
+      "3.2.16": 7,
+      "3.2.17": 7,
+      "3.2.18": 7,
+      "3.2.19": 7,
+      "3.2.20": 8,
+      "4": 9,
+      "4.1": 9,
+      "4.2": 9,
+      "4.3": 9,
+      "4.4": 9,
+      "4.5": 9,
+      "4.6": 9,
+      "4.7": 9,
+      "4.8": 10,
+      "4.9": 10,
+      "4.10": 10,
+      "4.11": 10,
+      "4.12": 10,
+      "4.13": 10,
+      "4.14": 10,
+      "4.15": 11,
+      "4.16": 11,
+      "4.17": 11,
+      "4.18": 11,
+      "4.19": 11,
+      "4.20": 11,
+      "4.21": 11,
+      "4.22": 11,
+      "4.23": 11,
+      "5": 13,
+      "6": 14,
+      "6.1": 14,
+      "6.2": 14,
+      "6.2.1": 14,
+      "6.2.2": 14,
+      "6.2.3": 14,
+      "6.2.4": 14,
+      "6.2.5": 15,
+      "6.2.6": 15,
+      "6.2.7": 15,
+      "6.2.8": 15,
+      "6.2.9": 15,
+      "6.2.10": 15,
+      "6.2.11": 15,
+      "6.2.12": 15,
+      "6.2.13": 15,
+      "6.2.14": 15,
+      "6.2.15": 15,
+      "6.2.16": 15,
+      "6.2.17": 15,
+      "6.2.18": 15,
+      "6.2.19": 15,
+      "6.2.20": 16,
+      "7": 17,
+      "7.1": 17,
+      "7.2": 17,
+      "7.3": 17,
+      "7.4": 17,
+      "8": 18,
+      "8.1": 18,
+      "8.2": 18
+    }
+  },
+  "entities": {
+    "v1": {
+      "components": [
+        {
+          "id": "C-01",
+          "name": "DoorControlSWC",
+          "type": "SWC",
+          "description": "Controls door lock, unlock, and child-lock actuation based on switch inputs and vehicle speed constraints.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-02",
+          "name": "WindowLiftSWC",
+          "type": "SWC",
+          "description": "Manages one-touch window lift, anti-pinch protection, and window position learning.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-03",
+          "name": "MirrorAdjustSWC",
+          "type": "SWC",
+          "description": "Controls mirror folding, heating, and position adjustment requests.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-04",
+          "name": "LightControlSWC",
+          "type": "SWC",
+          "description": "Controls interior ambient lighting and welcome light sequences.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-05",
+          "name": "SeatAdjustSWC",
+          "type": "SWC",
+          "description": "Handles seat position and lumbar adjustment requests with memory profiles.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-06",
+          "name": "ClimateInterfaceSWC",
+          "type": "SWC",
+          "description": "Bridges body domain functions to climate blower and recirculation actuators.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-07",
+          "name": "KeylessEntrySWC",
+          "type": "SWC",
+          "description": "Processes keyless authentication challenges and unlocks authorization.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-08",
+          "name": "BodyControlSWC",
+          "type": "SWC",
+          "description": "Central body domain arbiter; resolves actuator command conflicts and applies safety interlocks.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-09",
+          "name": "VehicleModeSWC",
+          "type": "SWC",
+          "description": "Maintains vehicle mode state (park, drive, crash) and distributes mode changes.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-10",
+          "name": "SpeedProviderSWC",
+          "type": "SWC",
+          "description": "Provides filtered vehicle speed for anti-pinch and child-lock interlocks.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-11",
+          "name": "RteAdapter",
+          "type": "RTE",
+          "description": "RTE adapter layer mapping SWC ports onto BSW communication services.",
+          "layer": "RTE"
+        },
+        {
+          "id": "C-12",
+          "name": "Com",
+          "type": "BSW",
+          "description": "AUTOSAR COM module; signal packing, transmission cycles, and timeout monitoring.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-13",
+          "name": "PduR",
+          "type": "BSW",
+          "description": "PDU router; routes PDUs between COM, CanIf, and transport layers.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-14",
+          "name": "CanIf",
+          "type": "BSW",
+          "description": "CAN interface; multiplexes PDUs onto CAN controller channels.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-15",
+          "name": "CanDriver",
+          "type": "BSW",
+          "description": "CAN driver for the body controller CAN channel with hardware filter configuration.",
+          "layer": "ECU-Abstraction"
+        },
+        {
+          "id": "C-16",
+          "name": "CanSm",
+          "type": "BSW",
+          "description": "CAN state manager; coordinates bus-off recovery and channel start/stop.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-17",
+          "name": "NvM",
+          "type": "BSW",
+          "description": "NVRAM manager; persists window pinch thresholds and seat memory profiles.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-18",
+          "name": "EcuM",
+          "type": "BSW",
+          "description": "ECU state manager; coordinates startup, shutdown, and sleep transitions.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-19",
+          "name": "DiagManager",
+          "type": "BSW",
+          "description": "Unified diagnostic services manager for UDS-based diagnostics.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-20",
+          "name": "IoHwAb",
+          "type": "ECU-Abstraction",
+          "description": "I/O hardware abstraction mapping physical pins to logical signals (door switches, window motors, mirror motors).",
+          "layer": "ECU-Abstraction"
+        }
+      ],
+      "interfaces": [
+        {
+          "id": "IF-01",
+          "name": "DoorStatusIF",
+          "kind": "S-R",
+          "provider": "C-01",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-02",
+          "name": "DoorCommandIF",
+          "kind": "C-S",
+          "provider": "C-08",
+          "consumers": [
+            "C-01"
+          ]
+        },
+        {
+          "id": "IF-03",
+          "name": "WindowStatusIF",
+          "kind": "S-R",
+          "provider": "C-02",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-04",
+          "name": "WindowCommandIF",
+          "kind": "C-S",
+          "provider": "C-08",
+          "consumers": [
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-05",
+          "name": "MirrorStatusIF",
+          "kind": "S-R",
+          "provider": "C-03",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-06",
+          "name": "MirrorCommandIF",
+          "kind": "C-S",
+          "provider": "C-08",
+          "consumers": [
+            "C-03"
+          ]
+        },
+        {
+          "id": "IF-07",
+          "name": "InteriorLightIF",
+          "kind": "S-R",
+          "provider": "C-04",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-08",
+          "name": "SeatStatusIF",
+          "kind": "S-R",
+          "provider": "C-05",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-09",
+          "name": "SeatCommandIF",
+          "kind": "C-S",
+          "provider": "C-08",
+          "consumers": [
+            "C-05"
+          ]
+        },
+        {
+          "id": "IF-10",
+          "name": "ClimateRequestIF",
+          "kind": "C-S",
+          "provider": "C-06",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-11",
+          "name": "KeyAuthIF",
+          "kind": "S-R",
+          "provider": "C-07",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-12",
+          "name": "VehicleModeIF",
+          "kind": "S-R",
+          "provider": "C-09",
+          "consumers": [
+            "C-08",
+            "C-01",
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-13",
+          "name": "VehicleSpeedIF",
+          "kind": "S-R",
+          "provider": "C-10",
+          "consumers": [
+            "C-01",
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-14",
+          "name": "RteComIF",
+          "kind": "S-R",
+          "provider": "C-11",
+          "consumers": [
+            "C-12"
+          ]
+        },
+        {
+          "id": "IF-15",
+          "name": "RtePduIF",
+          "kind": "C-S",
+          "provider": "C-12",
+          "consumers": [
+            "C-11"
+          ]
+        },
+        {
+          "id": "IF-16",
+          "name": "ComPduRIF",
+          "kind": "C-S",
+          "provider": "C-12",
+          "consumers": [
+            "C-13"
+          ]
+        },
+        {
+          "id": "IF-17",
+          "name": "PduCanIfIF",
+          "kind": "C-S",
+          "provider": "C-13",
+          "consumers": [
+            "C-14"
+          ]
+        },
+        {
+          "id": "IF-18",
+          "name": "CanIfDriverIF",
+          "kind": "C-S",
+          "provider": "C-14",
+          "consumers": [
+            "C-15"
+          ]
+        },
+        {
+          "id": "IF-19",
+          "name": "CanSmControlIF",
+          "kind": "C-S",
+          "provider": "C-16",
+          "consumers": [
+            "C-15"
+          ]
+        },
+        {
+          "id": "IF-20",
+          "name": "NvBlockIF",
+          "kind": "C-S",
+          "provider": "C-17",
+          "consumers": [
+            "C-02",
+            "C-05"
+          ]
+        },
+        {
+          "id": "IF-21",
+          "name": "EcuModeIF",
+          "kind": "S-R",
+          "provider": "C-18",
+          "consumers": [
+            "C-16",
+            "C-12"
+          ]
+        },
+        {
+          "id": "IF-22",
+          "name": "DiagRequestIF",
+          "kind": "C-S",
+          "provider": "C-19",
+          "consumers": [
+            "C-11"
+          ]
+        },
+        {
+          "id": "IF-23",
+          "name": "IoHwDoorIF",
+          "kind": "S-R",
+          "provider": "C-20",
+          "consumers": [
+            "C-01",
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-24",
+          "name": "IoHwMirrorSeatIF",
+          "kind": "S-R",
+          "provider": "C-20",
+          "consumers": [
+            "C-03",
+            "C-05"
+          ]
+        },
+        {
+          "id": "IF-25",
+          "name": "IoHwLightIF",
+          "kind": "S-R",
+          "provider": "C-20",
+          "consumers": [
+            "C-04"
+          ]
+        }
+      ],
+      "signals": [
+        {
+          "id": "SG-001",
+          "name": "DoorStatus",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-01"
+        },
+        {
+          "id": "SG-002",
+          "name": "ChildLockActive",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-01"
+        },
+        {
+          "id": "SG-003",
+          "name": "DoorLockRequest",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-02"
+        },
+        {
+          "id": "SG-004",
+          "name": "WindowPosition",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-03"
+        },
+        {
+          "id": "SG-005",
+          "name": "AntiPinchTriggered",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-03"
+        },
+        {
+          "id": "SG-006",
+          "name": "WindowLiftCommand",
+          "datatype": "sint8",
+          "unit": "-",
+          "interface_id": "IF-04"
+        },
+        {
+          "id": "SG-007",
+          "name": "MirrorFoldState",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-05"
+        },
+        {
+          "id": "SG-008",
+          "name": "MirrorPosition",
+          "datatype": "uint8",
+          "unit": "deg",
+          "interface_id": "IF-05"
+        },
+        {
+          "id": "SG-009",
+          "name": "MirrorAdjustCommand",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-06"
+        },
+        {
+          "id": "SG-010",
+          "name": "InteriorLightLevel",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-07"
+        },
+        {
+          "id": "SG-011",
+          "name": "SeatPosition",
+          "datatype": "uint16",
+          "unit": "mm",
+          "interface_id": "IF-08"
+        },
+        {
+          "id": "SG-012",
+          "name": "SeatMemorySlot",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-08"
+        },
+        {
+          "id": "SG-013",
+          "name": "SeatAdjustCommand",
+          "datatype": "sint8",
+          "unit": "-",
+          "interface_id": "IF-09"
+        },
+        {
+          "id": "SG-014",
+          "name": "BlowerLevelRequest",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-10"
+        },
+        {
+          "id": "SG-015",
+          "name": "KeyAuthStatus",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-11"
+        },
+        {
+          "id": "SG-016",
+          "name": "VehicleMode",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-12"
+        },
+        {
+          "id": "SG-017",
+          "name": "CrashSignal",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-12"
+        },
+        {
+          "id": "SG-018",
+          "name": "VehicleSpeed",
+          "datatype": "uint16",
+          "unit": "km/h",
+          "interface_id": "IF-13"
+        },
+        {
+          "id": "SG-019",
+          "name": "SpeedValidity",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-13"
+        },
+        {
+          "id": "SG-020",
+          "name": "ComSignalBatch1",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-14"
+        },
+        {
+          "id": "SG-021",
+          "name": "ComSignalBatch2",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-15"
+        },
+        {
+          "id": "SG-022",
+          "name": "PduPayload",
+          "datatype": "uint8[64]",
+          "unit": "-",
+          "interface_id": "IF-16"
+        },
+        {
+          "id": "SG-023",
+          "name": "CanFrame",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-17"
+        },
+        {
+          "id": "SG-024",
+          "name": "CanFrameRaw",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-18"
+        },
+        {
+          "id": "SG-025",
+          "name": "CanChannelState",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-19"
+        },
+        {
+          "id": "SG-026",
+          "name": "NvBlockStatus",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-20"
+        },
+        {
+          "id": "SG-027",
+          "name": "EcuModeState",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-21"
+        },
+        {
+          "id": "SG-028",
+          "name": "DiagRequestPayload",
+          "datatype": "uint8[255]",
+          "unit": "-",
+          "interface_id": "IF-22"
+        },
+        {
+          "id": "SG-029",
+          "name": "DoorSwitchRaw",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-23"
+        },
+        {
+          "id": "SG-030",
+          "name": "WindowMotorCurrent",
+          "datatype": "uint16",
+          "unit": "mA",
+          "interface_id": "IF-23"
+        },
+        {
+          "id": "SG-031",
+          "name": "MirrorMotorFeedback",
+          "datatype": "uint16",
+          "unit": "mA",
+          "interface_id": "IF-24"
+        },
+        {
+          "id": "SG-032",
+          "name": "SeatMotorFeedback",
+          "datatype": "uint16",
+          "unit": "mA",
+          "interface_id": "IF-24"
+        },
+        {
+          "id": "SG-033",
+          "name": "LightSwitchRaw",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-25"
+        },
+        {
+          "id": "SG-034",
+          "name": "AmbientLightFeedback",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-25"
+        }
+      ],
+      "dependencies": [
+        {
+          "id": "DEP-01",
+          "source_id": "C-01",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The DoorControlSWC requires door lock and unlock commands from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-02",
+          "source_id": "C-02",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires window lift commands from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-03",
+          "source_id": "C-03",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The MirrorAdjustSWC requires mirror adjustment commands from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-04",
+          "source_id": "C-05",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The SeatAdjustSWC requires seat adjustment commands from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-05",
+          "source_id": "C-06",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The ClimateInterfaceSWC requires blower control authorization from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-06",
+          "source_id": "C-08",
+          "target_id": "C-09",
+          "relationship": "requires",
+          "evidence": "The BodyControlSWC requires vehicle mode information from the VehicleModeSWC before releasing actuator commands.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-07",
+          "source_id": "C-08",
+          "target_id": "C-10",
+          "relationship": "requires",
+          "evidence": "The BodyControlSWC requires filtered vehicle speed from the SpeedProviderSWC for anti-pinch interlocks.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-08",
+          "source_id": "C-02",
+          "target_id": "C-10",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires vehicle speed to qualify one-touch window operation.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-09",
+          "source_id": "C-01",
+          "target_id": "C-07",
+          "relationship": "requires",
+          "evidence": "The DoorControlSWC requires keyless authorization status from the KeylessEntrySWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-10",
+          "source_id": "C-11",
+          "target_id": "C-12",
+          "relationship": "depends_on",
+          "evidence": "The RteAdapter depends on the COM module for signal transmission.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-11",
+          "source_id": "C-12",
+          "target_id": "C-13",
+          "relationship": "depends_on",
+          "evidence": "The COM module depends on the PduR for PDU routing.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-12",
+          "source_id": "C-13",
+          "target_id": "C-14",
+          "relationship": "depends_on",
+          "evidence": "The PduR depends on the CanIf for CAN transmission.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-13",
+          "source_id": "C-14",
+          "target_id": "C-15",
+          "relationship": "depends_on",
+          "evidence": "The CanIf depends on the CanDriver for hardware access.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-14",
+          "source_id": "C-16",
+          "target_id": "C-15",
+          "relationship": "requires",
+          "evidence": "The CanSm requires bus state control of the CanDriver.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-15",
+          "source_id": "C-02",
+          "target_id": "C-17",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires NVRAM persistence of anti-pinch thresholds from the NvM.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-16",
+          "source_id": "C-05",
+          "target_id": "C-17",
+          "relationship": "requires",
+          "evidence": "The SeatAdjustSWC requires NVRAM persistence of memory profiles from the NvM.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-17",
+          "source_id": "C-18",
+          "target_id": "C-16",
+          "relationship": "requires",
+          "evidence": "The EcuM requires communication channel control from the CanSm during shutdown.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-18",
+          "source_id": "C-18",
+          "target_id": "C-12",
+          "relationship": "requires",
+          "evidence": "The EcuM requires COM transmission suspension during shutdown.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-19",
+          "source_id": "C-19",
+          "target_id": "C-11",
+          "relationship": "requires",
+          "evidence": "The DiagManager requires the RteAdapter for diagnostic read access to application data.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-20",
+          "source_id": "C-01",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The DoorControlSWC requires raw door switch inputs from the IoHwAb.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-21",
+          "source_id": "C-02",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires window motor current feedback from the IoHwAb.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-22",
+          "source_id": "C-03",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The MirrorAdjustSWC requires mirror motor feedback from the IoHwAb.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-23",
+          "source_id": "C-04",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The LightControlSWC requires ambient light feedback from the IoHwAb.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-24",
+          "source_id": "C-05",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The SeatAdjustSWC requires seat motor feedback from the IoHwAb.",
+          "page_hint": null
+        }
+      ],
+      "flows": [
+        {
+          "id": "FL-1",
+          "name": "Door Lock Actuation",
+          "steps": [
+            "C-20",
+            "C-01",
+            "C-08",
+            "C-11",
+            "C-12",
+            "C-13",
+            "C-14",
+            "C-15"
+          ],
+          "trigger": "Driver operates door lock switch",
+          "description": "Raw switch input is debounced in IoHwAb, evaluated by DoorControlSWC, arbitrated by BodyControlSWC, and the resulting command is transmitted over CAN."
+        },
+        {
+          "id": "FL-2",
+          "name": "One-Touch Window Lift with Anti-Pinch",
+          "steps": [
+            "C-20",
+            "C-02",
+            "C-10",
+            "C-08",
+            "C-11",
+            "C-12",
+            "C-13",
+            "C-14",
+            "C-15"
+          ],
+          "trigger": "Driver triggers one-touch window lift",
+          "description": "Motor current from IoHwAb is monitored by WindowLiftSWC; vehicle speed from SpeedProviderSWC qualifies the command; BodyControlSWC arbitrates and forwards the request over CAN."
+        },
+        {
+          "id": "FL-3",
+          "name": "Keyless Unlock",
+          "steps": [
+            "C-07",
+            "C-08",
+            "C-01",
+            "C-20"
+          ],
+          "trigger": "Authenticated key approach detected",
+          "description": "KeylessEntrySWC publishes the authentication result; BodyControlSWC authorizes the unlock; DoorControlSWC actuates via IoHwAb."
+        },
+        {
+          "id": "FL-4",
+          "name": "Seat Memory Recall",
+          "steps": [
+            "C-17",
+            "C-05",
+            "C-08",
+            "C-20"
+          ],
+          "trigger": "Driver selects memory slot",
+          "description": "NvM provides the persisted profile, SeatAdjustSWC computes motor targets, BodyControlSWC arbitrates, and IoHwAb drives the seat motors."
+        },
+        {
+          "id": "FL-5",
+          "name": "Bus-Off Recovery",
+          "steps": [
+            "C-15",
+            "C-16",
+            "C-18"
+          ],
+          "trigger": "CAN controller enters bus-off state",
+          "description": "CanDriver reports the fault, CanSm executes the recovery sequence, and EcuM is informed for mode bookkeeping."
+        }
+      ]
+    },
+    "v2": {
+      "components": [
+        {
+          "id": "C-01",
+          "name": "DoorControlSWC",
+          "type": "SWC",
+          "description": "Controls door lock, unlock, and child-lock actuation based on switch inputs and vehicle speed constraints.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-02",
+          "name": "WindowLiftSWC",
+          "type": "SWC",
+          "description": "Manages one-touch window lift, anti-pinch protection, and window position learning.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-03",
+          "name": "MirrorAdjustSWC",
+          "type": "SWC",
+          "description": "Controls mirror folding, heating, and position adjustment requests.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-04",
+          "name": "LightControlSWC",
+          "type": "SWC",
+          "description": "Controls interior ambient lighting and welcome light sequences.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-05",
+          "name": "SeatAdjustSWC",
+          "type": "SWC",
+          "description": "Handles seat position and lumbar adjustment requests with memory profiles.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-06",
+          "name": "ClimateInterfaceSWC",
+          "type": "SWC",
+          "description": "Bridges body domain functions to climate blower and recirculation actuators.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-07",
+          "name": "KeylessEntrySWC",
+          "type": "SWC",
+          "description": "Processes keyless authentication challenges and unlocks authorization.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-08",
+          "name": "BodyControlSWC",
+          "type": "SWC",
+          "description": "Central body domain arbiter; resolves actuator command conflicts and applies safety interlocks.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-09",
+          "name": "VehicleModeMgrSWC",
+          "type": "SWC",
+          "description": "Maintains vehicle mode state (park, drive, crash) and distributes mode changes. Renamed from VehicleModeSWC.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-10",
+          "name": "SpeedProviderSWC",
+          "type": "SWC",
+          "description": "Provides filtered vehicle speed for anti-pinch and child-lock interlocks.",
+          "layer": "Application"
+        },
+        {
+          "id": "C-11",
+          "name": "RteAdapter",
+          "type": "RTE",
+          "description": "RTE adapter layer mapping SWC ports onto BSW communication services.",
+          "layer": "RTE"
+        },
+        {
+          "id": "C-12",
+          "name": "Com",
+          "type": "BSW",
+          "description": "AUTOSAR COM module; signal packing, transmission cycles, and timeout monitoring.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-13",
+          "name": "PduR",
+          "type": "BSW",
+          "description": "PDU router; routes PDUs between COM, CanIf, and transport layers.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-14",
+          "name": "CanIf",
+          "type": "BSW",
+          "description": "CAN interface; multiplexes PDUs onto CAN controller channels.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-15",
+          "name": "CanDriver",
+          "type": "BSW",
+          "description": "CAN driver for the body controller CAN channel with hardware filter configuration.",
+          "layer": "ECU-Abstraction"
+        },
+        {
+          "id": "C-16",
+          "name": "CanSm",
+          "type": "BSW",
+          "description": "CAN state manager; coordinates bus-off recovery and channel start/stop.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-17",
+          "name": "NvM",
+          "type": "BSW",
+          "description": "NVRAM manager; persists window pinch thresholds and seat memory profiles.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-18",
+          "name": "EcuM",
+          "type": "BSW",
+          "description": "ECU state manager; coordinates startup, shutdown, and sleep transitions.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-19",
+          "name": "DiagManager",
+          "type": "BSW",
+          "description": "Unified diagnostic services manager for UDS-based diagnostics.",
+          "layer": "Service"
+        },
+        {
+          "id": "C-20",
+          "name": "IoHwAb",
+          "type": "ECU-Abstraction",
+          "description": "I/O hardware abstraction mapping physical pins to logical signals (door switches, window motors, mirror motors).",
+          "layer": "ECU-Abstraction"
+        }
+      ],
+      "interfaces": [
+        {
+          "id": "IF-01",
+          "name": "DoorStatusIF",
+          "kind": "S-R",
+          "provider": "C-01",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-02",
+          "name": "DoorCommandIF",
+          "kind": "C-S",
+          "provider": "C-08",
+          "consumers": [
+            "C-01"
+          ]
+        },
+        {
+          "id": "IF-03",
+          "name": "WindowStatusIF",
+          "kind": "S-R",
+          "provider": "C-02",
+          "consumers": [
+            "C-08",
+            "C-04"
+          ]
+        },
+        {
+          "id": "IF-04",
+          "name": "WindowCommandIF",
+          "kind": "C-S",
+          "provider": "C-08",
+          "consumers": [
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-05",
+          "name": "MirrorStatusIF",
+          "kind": "S-R",
+          "provider": "C-03",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-06",
+          "name": "MirrorCommandIF",
+          "kind": "C-S",
+          "provider": "C-08",
+          "consumers": [
+            "C-03"
+          ]
+        },
+        {
+          "id": "IF-07",
+          "name": "InteriorLightIF",
+          "kind": "S-R",
+          "provider": "C-04",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-10",
+          "name": "ClimateRequestIF",
+          "kind": "C-S",
+          "provider": "C-06",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-11",
+          "name": "KeyAuthIF",
+          "kind": "S-R",
+          "provider": "C-07",
+          "consumers": [
+            "C-08"
+          ]
+        },
+        {
+          "id": "IF-12",
+          "name": "VehicleModeIF",
+          "kind": "S-R",
+          "provider": "C-09",
+          "consumers": [
+            "C-08",
+            "C-01",
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-13",
+          "name": "VehicleSpeedIF",
+          "kind": "S-R",
+          "provider": "C-08",
+          "consumers": [
+            "C-01",
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-14",
+          "name": "RteComIF",
+          "kind": "S-R",
+          "provider": "C-11",
+          "consumers": [
+            "C-12"
+          ]
+        },
+        {
+          "id": "IF-15",
+          "name": "RtePduIF",
+          "kind": "C-S",
+          "provider": "C-12",
+          "consumers": [
+            "C-11"
+          ]
+        },
+        {
+          "id": "IF-16",
+          "name": "ComPduRIF",
+          "kind": "C-S",
+          "provider": "C-12",
+          "consumers": [
+            "C-13"
+          ]
+        },
+        {
+          "id": "IF-17",
+          "name": "PduCanIfIF",
+          "kind": "C-S",
+          "provider": "C-13",
+          "consumers": [
+            "C-14"
+          ]
+        },
+        {
+          "id": "IF-18",
+          "name": "CanIfDriverIF",
+          "kind": "C-S",
+          "provider": "C-14",
+          "consumers": [
+            "C-15"
+          ]
+        },
+        {
+          "id": "IF-19",
+          "name": "CanSmControlIF",
+          "kind": "C-S",
+          "provider": "C-16",
+          "consumers": [
+            "C-15"
+          ]
+        },
+        {
+          "id": "IF-20",
+          "name": "NvBlockIF",
+          "kind": "C-S",
+          "provider": "C-17",
+          "consumers": [
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-21",
+          "name": "EcuModeIF",
+          "kind": "S-R",
+          "provider": "C-18",
+          "consumers": [
+            "C-16",
+            "C-12"
+          ]
+        },
+        {
+          "id": "IF-22",
+          "name": "DiagRequestIF",
+          "kind": "C-S",
+          "provider": "C-19",
+          "consumers": [
+            "C-11"
+          ]
+        },
+        {
+          "id": "IF-23",
+          "name": "IoHwDoorIF",
+          "kind": "S-R",
+          "provider": "C-20",
+          "consumers": [
+            "C-01",
+            "C-02"
+          ]
+        },
+        {
+          "id": "IF-24",
+          "name": "IoHwMirrorSeatIF",
+          "kind": "S-R",
+          "provider": "C-20",
+          "consumers": [
+            "C-03"
+          ]
+        },
+        {
+          "id": "IF-25",
+          "name": "IoHwLightIF",
+          "kind": "S-R",
+          "provider": "C-20",
+          "consumers": [
+            "C-04"
+          ]
+        }
+      ],
+      "signals": [
+        {
+          "id": "SG-001",
+          "name": "DoorStatus",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-01"
+        },
+        {
+          "id": "SG-002",
+          "name": "ChildLockActive",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-01"
+        },
+        {
+          "id": "SG-003",
+          "name": "DoorLockRequest",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-02"
+        },
+        {
+          "id": "SG-004",
+          "name": "WindowPosition",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-03"
+        },
+        {
+          "id": "SG-005",
+          "name": "AntiPinchTriggered",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-03"
+        },
+        {
+          "id": "SG-006",
+          "name": "WindowLiftCommand",
+          "datatype": "sint8",
+          "unit": "-",
+          "interface_id": "IF-04"
+        },
+        {
+          "id": "SG-007",
+          "name": "MirrorFoldState",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-05"
+        },
+        {
+          "id": "SG-008",
+          "name": "MirrorPosition",
+          "datatype": "uint8",
+          "unit": "deg",
+          "interface_id": "IF-05"
+        },
+        {
+          "id": "SG-009",
+          "name": "MirrorAdjustCommand",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-06"
+        },
+        {
+          "id": "SG-010",
+          "name": "InteriorLightLevel",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-07"
+        },
+        {
+          "id": "SG-014",
+          "name": "BlowerLevelRequest",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-10"
+        },
+        {
+          "id": "SG-016",
+          "name": "VehicleMode",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-12"
+        },
+        {
+          "id": "SG-017",
+          "name": "CrashSignal",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-12"
+        },
+        {
+          "id": "SG-018",
+          "name": "VehicleSpeed",
+          "datatype": "uint16",
+          "unit": "km/h",
+          "interface_id": "IF-13"
+        },
+        {
+          "id": "SG-019",
+          "name": "SpeedValidity",
+          "datatype": "boolean",
+          "unit": "-",
+          "interface_id": "IF-13"
+        },
+        {
+          "id": "SG-020",
+          "name": "ComSignalBatch1",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-14"
+        },
+        {
+          "id": "SG-021",
+          "name": "ComSignalBatch2",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-15"
+        },
+        {
+          "id": "SG-022",
+          "name": "PduPayload",
+          "datatype": "uint8[64]",
+          "unit": "-",
+          "interface_id": "IF-16"
+        },
+        {
+          "id": "SG-023",
+          "name": "CanFrame",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-17"
+        },
+        {
+          "id": "SG-024",
+          "name": "CanFrameRaw",
+          "datatype": "uint8[8]",
+          "unit": "-",
+          "interface_id": "IF-18"
+        },
+        {
+          "id": "SG-025",
+          "name": "CanChannelState",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-19"
+        },
+        {
+          "id": "SG-026",
+          "name": "NvBlockStatus",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-20"
+        },
+        {
+          "id": "SG-027",
+          "name": "EcuModeState",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-21"
+        },
+        {
+          "id": "SG-028",
+          "name": "DiagRequestPayload",
+          "datatype": "uint8[255]",
+          "unit": "-",
+          "interface_id": "IF-22"
+        },
+        {
+          "id": "SG-029",
+          "name": "DoorSwitchRaw",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-23"
+        },
+        {
+          "id": "SG-030",
+          "name": "WindowMotorCurrent",
+          "datatype": "uint16",
+          "unit": "mA",
+          "interface_id": "IF-23"
+        },
+        {
+          "id": "SG-031",
+          "name": "MirrorMotorFeedback",
+          "datatype": "uint16",
+          "unit": "mA",
+          "interface_id": "IF-24"
+        },
+        {
+          "id": "SG-032",
+          "name": "SeatMotorFeedback",
+          "datatype": "uint16",
+          "unit": "mA",
+          "interface_id": "IF-24"
+        },
+        {
+          "id": "SG-033",
+          "name": "LightSwitchRaw",
+          "datatype": "uint8",
+          "unit": "-",
+          "interface_id": "IF-25"
+        },
+        {
+          "id": "SG-034",
+          "name": "AmbientLightFeedback",
+          "datatype": "uint8",
+          "unit": "%",
+          "interface_id": "IF-25"
+        }
+      ],
+      "dependencies": [
+        {
+          "id": "DEP-01",
+          "source_id": "C-01",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The DoorControlSWC requires door lock and unlock commands from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-02",
+          "source_id": "C-02",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires window lift commands from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-03",
+          "source_id": "C-03",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The MirrorAdjustSWC requires mirror adjustment commands from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-05",
+          "source_id": "C-06",
+          "target_id": "C-08",
+          "relationship": "requires",
+          "evidence": "The ClimateInterfaceSWC requires blower control authorization from the BodyControlSWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-06",
+          "source_id": "C-08",
+          "target_id": "C-09",
+          "relationship": "requires",
+          "evidence": "The BodyControlSWC requires vehicle mode information from the VehicleModeSWC before releasing actuator commands.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-07",
+          "source_id": "C-08",
+          "target_id": "C-10",
+          "relationship": "requires",
+          "evidence": "The BodyControlSWC requires filtered vehicle speed from the SpeedProviderSWC for anti-pinch interlocks.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-08",
+          "source_id": "C-02",
+          "target_id": "C-10",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires vehicle speed to qualify one-touch window operation.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-09",
+          "source_id": "C-01",
+          "target_id": "C-07",
+          "relationship": "requires",
+          "evidence": "The DoorControlSWC requires keyless authorization status from the KeylessEntrySWC.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-10",
+          "source_id": "C-11",
+          "target_id": "C-12",
+          "relationship": "depends_on",
+          "evidence": "The RteAdapter depends on the COM module for signal transmission.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-11",
+          "source_id": "C-12",
+          "target_id": "C-13",
+          "relationship": "depends_on",
+          "evidence": "The COM module depends on the PduR for PDU routing.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-12",
+          "source_id": "C-13",
+          "target_id": "C-14",
+          "relationship": "depends_on",
+          "evidence": "The PduR depends on the CanIf for CAN transmission.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-13",
+          "source_id": "C-14",
+          "target_id": "C-15",
+          "relationship": "depends_on",
+          "evidence": "The CanIf depends on the CanDriver for hardware access.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-14",
+          "source_id": "C-16",
+          "target_id": "C-15",
+          "relationship": "requires",
+          "evidence": "The CanSm requires bus state control of the CanDriver.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-15",
+          "source_id": "C-02",
+          "target_id": "C-17",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires NVRAM persistence of anti-pinch thresholds from the NvM.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-17",
+          "source_id": "C-18",
+          "target_id": "C-16",
+          "relationship": "requires",
+          "evidence": "The EcuM requires communication channel control from the CanSm during shutdown.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-18",
+          "source_id": "C-18",
+          "target_id": "C-12",
+          "relationship": "requires",
+          "evidence": "The EcuM requires COM transmission suspension during shutdown.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-20",
+          "source_id": "C-01",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The DoorControlSWC requires raw door switch inputs from the IoHwAb.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-21",
+          "source_id": "C-02",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The WindowLiftSWC requires window motor current feedback from the IoHwAb.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-22",
+          "source_id": "C-03",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The MirrorAdjustSWC requires mirror motor feedback from the IoHwAb.",
+          "page_hint": null
+        },
+        {
+          "id": "DEP-23",
+          "source_id": "C-04",
+          "target_id": "C-20",
+          "relationship": "requires",
+          "evidence": "The LightControlSWC requires ambient light feedback from the IoHwAb.",
+          "page_hint": null
+        }
+      ],
+      "flows": [
+        {
+          "id": "FL-1",
+          "name": "Door Lock Actuation",
+          "steps": [
+            "C-20",
+            "C-01",
+            "C-08",
+            "C-11",
+            "C-12",
+            "C-13",
+            "C-14",
+            "C-15"
+          ],
+          "trigger": "Driver operates door lock switch",
+          "description": "Raw switch input is debounced in IoHwAb, evaluated by DoorControlSWC, arbitrated by BodyControlSWC, and the resulting command is transmitted over CAN."
+        },
+        {
+          "id": "FL-2",
+          "name": "One-Touch Window Lift with Anti-Pinch",
+          "steps": [
+            "C-20",
+            "C-02",
+            "C-10",
+            "C-08",
+            "C-11",
+            "C-12",
+            "C-13",
+            "C-14",
+            "C-15"
+          ],
+          "trigger": "Driver triggers one-touch window lift",
+          "description": "Motor current from IoHwAb is monitored by WindowLiftSWC; vehicle speed from SpeedProviderSWC qualifies the command; BodyControlSWC arbitrates and forwards the request over CAN."
+        },
+        {
+          "id": "FL-3",
+          "name": "Keyless Unlock",
+          "steps": [
+            "C-07",
+            "C-08",
+            "C-01",
+            "C-20"
+          ],
+          "trigger": "Authenticated key approach detected",
+          "description": "KeylessEntrySWC publishes the authentication result; BodyControlSWC authorizes the unlock; DoorControlSWC actuates via IoHwAb."
+        },
+        {
+          "id": "FL-5",
+          "name": "Bus-Off Recovery",
+          "steps": [
+            "C-15",
+            "C-16",
+            "C-18"
+          ],
+          "trigger": "CAN controller enters bus-off state",
+          "description": "CanDriver reports the fault, CanSm executes the recovery sequence, and EcuM is informed for mode bookkeeping."
+        }
+      ]
+    }
+  },
+  "ports": {
+    "v1": [
+      {
+        "id": "P-001",
+        "component_id": "C-01",
+        "interface_id": "IF-01",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-002",
+        "component_id": "C-08",
+        "interface_id": "IF-01",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-003",
+        "component_id": "C-08",
+        "interface_id": "IF-02",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-004",
+        "component_id": "C-01",
+        "interface_id": "IF-02",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-005",
+        "component_id": "C-02",
+        "interface_id": "IF-03",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-006",
+        "component_id": "C-08",
+        "interface_id": "IF-03",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-007",
+        "component_id": "C-08",
+        "interface_id": "IF-04",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-008",
+        "component_id": "C-02",
+        "interface_id": "IF-04",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-009",
+        "component_id": "C-03",
+        "interface_id": "IF-05",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-010",
+        "component_id": "C-08",
+        "interface_id": "IF-05",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-011",
+        "component_id": "C-08",
+        "interface_id": "IF-06",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-012",
+        "component_id": "C-03",
+        "interface_id": "IF-06",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-013",
+        "component_id": "C-04",
+        "interface_id": "IF-07",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-014",
+        "component_id": "C-08",
+        "interface_id": "IF-07",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-015",
+        "component_id": "C-05",
+        "interface_id": "IF-08",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-016",
+        "component_id": "C-08",
+        "interface_id": "IF-08",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-017",
+        "component_id": "C-08",
+        "interface_id": "IF-09",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-018",
+        "component_id": "C-05",
+        "interface_id": "IF-09",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-019",
+        "component_id": "C-06",
+        "interface_id": "IF-10",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-020",
+        "component_id": "C-08",
+        "interface_id": "IF-10",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-021",
+        "component_id": "C-07",
+        "interface_id": "IF-11",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-022",
+        "component_id": "C-08",
+        "interface_id": "IF-11",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-023",
+        "component_id": "C-09",
+        "interface_id": "IF-12",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-024",
+        "component_id": "C-08",
+        "interface_id": "IF-12",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-025",
+        "component_id": "C-01",
+        "interface_id": "IF-12",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-026",
+        "component_id": "C-02",
+        "interface_id": "IF-12",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-027",
+        "component_id": "C-10",
+        "interface_id": "IF-13",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-028",
+        "component_id": "C-01",
+        "interface_id": "IF-13",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-029",
+        "component_id": "C-02",
+        "interface_id": "IF-13",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-030",
+        "component_id": "C-11",
+        "interface_id": "IF-14",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-031",
+        "component_id": "C-12",
+        "interface_id": "IF-14",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-032",
+        "component_id": "C-12",
+        "interface_id": "IF-15",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-033",
+        "component_id": "C-11",
+        "interface_id": "IF-15",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-034",
+        "component_id": "C-12",
+        "interface_id": "IF-16",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-035",
+        "component_id": "C-13",
+        "interface_id": "IF-16",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-036",
+        "component_id": "C-13",
+        "interface_id": "IF-17",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-037",
+        "component_id": "C-14",
+        "interface_id": "IF-17",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-038",
+        "component_id": "C-14",
+        "interface_id": "IF-18",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-039",
+        "component_id": "C-15",
+        "interface_id": "IF-18",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-040",
+        "component_id": "C-16",
+        "interface_id": "IF-19",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-041",
+        "component_id": "C-15",
+        "interface_id": "IF-19",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-042",
+        "component_id": "C-17",
+        "interface_id": "IF-20",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-043",
+        "component_id": "C-02",
+        "interface_id": "IF-20",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-044",
+        "component_id": "C-05",
+        "interface_id": "IF-20",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-045",
+        "component_id": "C-18",
+        "interface_id": "IF-21",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-046",
+        "component_id": "C-16",
+        "interface_id": "IF-21",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-047",
+        "component_id": "C-12",
+        "interface_id": "IF-21",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-048",
+        "component_id": "C-19",
+        "interface_id": "IF-22",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-049",
+        "component_id": "C-11",
+        "interface_id": "IF-22",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-050",
+        "component_id": "C-20",
+        "interface_id": "IF-23",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-051",
+        "component_id": "C-01",
+        "interface_id": "IF-23",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-052",
+        "component_id": "C-02",
+        "interface_id": "IF-23",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-053",
+        "component_id": "C-20",
+        "interface_id": "IF-24",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-054",
+        "component_id": "C-03",
+        "interface_id": "IF-24",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-055",
+        "component_id": "C-05",
+        "interface_id": "IF-24",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-056",
+        "component_id": "C-20",
+        "interface_id": "IF-25",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-057",
+        "component_id": "C-04",
+        "interface_id": "IF-25",
+        "direction": "requires",
+        "page_hint": null
+      }
+    ],
+    "v2": [
+      {
+        "id": "P-001",
+        "component_id": "C-01",
+        "interface_id": "IF-01",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-002",
+        "component_id": "C-08",
+        "interface_id": "IF-01",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-003",
+        "component_id": "C-08",
+        "interface_id": "IF-02",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-004",
+        "component_id": "C-01",
+        "interface_id": "IF-02",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-005",
+        "component_id": "C-02",
+        "interface_id": "IF-03",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-006",
+        "component_id": "C-08",
+        "interface_id": "IF-03",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-007",
+        "component_id": "C-04",
+        "interface_id": "IF-03",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-008",
+        "component_id": "C-08",
+        "interface_id": "IF-04",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-009",
+        "component_id": "C-02",
+        "interface_id": "IF-04",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-010",
+        "component_id": "C-03",
+        "interface_id": "IF-05",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-011",
+        "component_id": "C-08",
+        "interface_id": "IF-05",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-012",
+        "component_id": "C-08",
+        "interface_id": "IF-06",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-013",
+        "component_id": "C-03",
+        "interface_id": "IF-06",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-014",
+        "component_id": "C-04",
+        "interface_id": "IF-07",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-015",
+        "component_id": "C-08",
+        "interface_id": "IF-07",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-016",
+        "component_id": "C-06",
+        "interface_id": "IF-10",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-017",
+        "component_id": "C-08",
+        "interface_id": "IF-10",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-018",
+        "component_id": "C-07",
+        "interface_id": "IF-11",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-019",
+        "component_id": "C-08",
+        "interface_id": "IF-11",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-020",
+        "component_id": "C-09",
+        "interface_id": "IF-12",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-021",
+        "component_id": "C-08",
+        "interface_id": "IF-12",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-022",
+        "component_id": "C-01",
+        "interface_id": "IF-12",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-023",
+        "component_id": "C-02",
+        "interface_id": "IF-12",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-024",
+        "component_id": "C-08",
+        "interface_id": "IF-13",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-025",
+        "component_id": "C-01",
+        "interface_id": "IF-13",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-026",
+        "component_id": "C-02",
+        "interface_id": "IF-13",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-027",
+        "component_id": "C-11",
+        "interface_id": "IF-14",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-028",
+        "component_id": "C-12",
+        "interface_id": "IF-14",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-029",
+        "component_id": "C-12",
+        "interface_id": "IF-15",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-030",
+        "component_id": "C-11",
+        "interface_id": "IF-15",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-031",
+        "component_id": "C-12",
+        "interface_id": "IF-16",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-032",
+        "component_id": "C-13",
+        "interface_id": "IF-16",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-033",
+        "component_id": "C-13",
+        "interface_id": "IF-17",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-034",
+        "component_id": "C-14",
+        "interface_id": "IF-17",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-035",
+        "component_id": "C-14",
+        "interface_id": "IF-18",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-036",
+        "component_id": "C-15",
+        "interface_id": "IF-18",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-037",
+        "component_id": "C-16",
+        "interface_id": "IF-19",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-038",
+        "component_id": "C-15",
+        "interface_id": "IF-19",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-039",
+        "component_id": "C-17",
+        "interface_id": "IF-20",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-040",
+        "component_id": "C-02",
+        "interface_id": "IF-20",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-041",
+        "component_id": "C-18",
+        "interface_id": "IF-21",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-042",
+        "component_id": "C-16",
+        "interface_id": "IF-21",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-043",
+        "component_id": "C-12",
+        "interface_id": "IF-21",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-044",
+        "component_id": "C-19",
+        "interface_id": "IF-22",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-045",
+        "component_id": "C-11",
+        "interface_id": "IF-22",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-046",
+        "component_id": "C-20",
+        "interface_id": "IF-23",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-047",
+        "component_id": "C-01",
+        "interface_id": "IF-23",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-048",
+        "component_id": "C-02",
+        "interface_id": "IF-23",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-049",
+        "component_id": "C-20",
+        "interface_id": "IF-24",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-050",
+        "component_id": "C-03",
+        "interface_id": "IF-24",
+        "direction": "requires",
+        "page_hint": null
+      },
+      {
+        "id": "P-051",
+        "component_id": "C-20",
+        "interface_id": "IF-25",
+        "direction": "provides",
+        "page_hint": null
+      },
+      {
+        "id": "P-052",
+        "component_id": "C-04",
+        "interface_id": "IF-25",
+        "direction": "requires",
+        "page_hint": null
+      }
+    ]
+  },
+  "expected_diff": {
+    "components": {
+      "added": [],
+      "removed": [],
+      "modified": [
+        "C-09"
+      ],
+      "unchanged": [
+        "C-01",
+        "C-02",
+        "C-03",
+        "C-04",
+        "C-05",
+        "C-06",
+        "C-07",
+        "C-08",
+        "C-10",
+        "C-11",
+        "C-12",
+        "C-13",
+        "C-14",
+        "C-15",
+        "C-16",
+        "C-17",
+        "C-18",
+        "C-19",
+        "C-20"
+      ]
+    },
+    "interfaces": {
+      "added": [],
+      "removed": [
+        "IF-08",
+        "IF-09"
+      ],
+      "modified": [
+        "IF-03",
+        "IF-13",
+        "IF-20",
+        "IF-24"
+      ],
+      "unchanged": [
+        "IF-01",
+        "IF-02",
+        "IF-04",
+        "IF-05",
+        "IF-06",
+        "IF-07",
+        "IF-10",
+        "IF-11",
+        "IF-12",
+        "IF-14",
+        "IF-15",
+        "IF-16",
+        "IF-17",
+        "IF-18",
+        "IF-19",
+        "IF-21",
+        "IF-22",
+        "IF-23",
+        "IF-25"
+      ]
+    },
+    "signals": {
+      "added": [],
+      "removed": [
+        "SG-011",
+        "SG-012",
+        "SG-013",
+        "SG-015"
+      ],
+      "modified": [],
+      "unchanged": [
+        "SG-001",
+        "SG-002",
+        "SG-003",
+        "SG-004",
+        "SG-005",
+        "SG-006",
+        "SG-007",
+        "SG-008",
+        "SG-009",
+        "SG-010",
+        "SG-014",
+        "SG-016",
+        "SG-017",
+        "SG-018",
+        "SG-019",
+        "SG-020",
+        "SG-021",
+        "SG-022",
+        "SG-023",
+        "SG-024",
+        "SG-025",
+        "SG-026",
+        "SG-027",
+        "SG-028",
+        "SG-029",
+        "SG-030",
+        "SG-031",
+        "SG-032",
+        "SG-033",
+        "SG-034"
+      ]
+    },
+    "dependencies": {
+      "added": [],
+      "removed": [
+        "DEP-04",
+        "DEP-16",
+        "DEP-19",
+        "DEP-24"
+      ],
+      "modified": [],
+      "unchanged": [
+        "DEP-01",
+        "DEP-02",
+        "DEP-03",
+        "DEP-05",
+        "DEP-06",
+        "DEP-07",
+        "DEP-08",
+        "DEP-09",
+        "DEP-10",
+        "DEP-11",
+        "DEP-12",
+        "DEP-13",
+        "DEP-14",
+        "DEP-15",
+        "DEP-17",
+        "DEP-18",
+        "DEP-20",
+        "DEP-21",
+        "DEP-22",
+        "DEP-23"
+      ]
+    },
+    "flows": {
+      "added": [],
+      "removed": [
+        "FL-4"
+      ],
+      "modified": [],
+      "unchanged": [
+        "FL-1",
+        "FL-2",
+        "FL-3",
+        "FL-5"
+      ]
+    }
+  },
+  "expected_findings": [
+    {
+      "defect_id": "D1_removed_dependency",
+      "check": "removed_dependency",
+      "severity": "HIGH",
+      "description": "Dependency DEP-19 (DiagManager -> RteAdapter) present in v1 is absent in v2 with no replacement.",
+      "gold_version": "v1",
+      "gold_section": "6.2.19",
+      "gold_page": 16
+    },
+    {
+      "defect_id": "D2_stale_component_reference",
+      "check": "stale_reference",
+      "severity": "MEDIUM",
+      "description": "IF-12 consumer list references old component name VehicleModeSWC after rename to VehicleModeMgrSWC.",
+      "gold_version": "v2",
+      "gold_section": "4.10",
+      "gold_page": 10
+    },
+    {
+      "defect_id": "D3_conflicting_provider",
+      "check": "conflicting_provider",
+      "severity": "HIGH",
+      "description": "VehicleSpeedIF (IF-13) has conflicting provider statements: table says C-08, prose says C-10.",
+      "gold_version": "v2",
+      "gold_section": "4.11",
+      "gold_page": 10
+    },
+    {
+      "defect_id": "D4_orphan_component",
+      "check": "orphan_component",
+      "severity": "MEDIUM",
+      "description": "SeatAdjustSWC (C-05) has no interfaces, dependencies, or flows in v2.",
+      "gold_version": "v2",
+      "gold_section": "3.2.5",
+      "gold_page": 5
+    },
+    {
+      "defect_id": "D5_dropped_signal_referenced",
+      "check": "dropped_signal_reference",
+      "severity": "MEDIUM",
+      "description": "IF-11 prose still describes KeyAuthStatus (SG-015) although the signal was removed.",
+      "gold_version": "v2",
+      "gold_section": "4.9",
+      "gold_page": 10
+    },
+    {
+      "defect_id": "D6_contradictory_statement",
+      "check": "contradiction",
+      "severity": "HIGH",
+      "description": "v2 states ClimateInterfaceSWC does not require BodyControlSWC while DEP-05 lists that dependency.",
+      "gold_version": "v2",
+      "gold_section": "6.2.4",
+      "gold_page": 14
+    },
+    {
+      "defect_id": "D7_port_count_mismatch",
+      "check": "prose_table_mismatch",
+      "severity": "LOW",
+      "description": "IF-04 prose port count does not match its port table.",
+      "gold_version": "v2",
+      "gold_section": "4.4",
+      "gold_page": 9
+    },
+    {
+      "defect_id": "D8_new_consumer_of_changed_interface",
+      "check": "impact_relevant_change",
+      "severity": "INFO",
+      "description": "WindowStatusIF (IF-03) gained consumer C-04 (LightControlSWC) in v2.",
+      "gold_version": "v2",
+      "gold_section": "4.3",
+      "gold_page": 9
+    }
+  ],
+  "qa_pairs": [
+    {
+      "id": "QA-01",
+      "question": "Which component is the central arbiter in the ABC architecture?",
+      "expected_answer": "BodyControlSWC (C-08) is the central arbiter; it resolves actuator command conflicts and applies safety interlocks.",
+      "gold_sections": [
+        "2",
+        "3.2.8"
+      ],
+      "gold_pages": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "QA-02",
+      "question": "Which components provide the VehicleSpeed signal and who consumes it?",
+      "expected_answer": "SpeedProviderSWC (C-10) provides VehicleSpeedIF (IF-13); consumers are DoorControlSWC (C-01) and WindowLiftSWC (C-02).",
+      "gold_sections": [
+        "4.13",
+        "5"
+      ],
+      "gold_pages": [
+        10,
+        13
+      ]
+    },
+    {
+      "id": "QA-03",
+      "question": "What signals are carried by the DoorStatusIF interface?",
+      "expected_answer": "DoorStatus (uint8) and ChildLockActive (boolean).",
+      "gold_sections": [
+        "4.1",
+        "5"
+      ],
+      "gold_pages": [
+        9,
+        13
+      ]
+    },
+    {
+      "id": "QA-04",
+      "question": "List the components in the CAN communication path in order.",
+      "expected_answer": "Application SWC -> RteAdapter (C-11) -> Com (C-12) -> PduR (C-13) -> CanIf (C-14) -> CanDriver (C-15).",
+      "gold_sections": [
+        "2"
+      ],
+      "gold_pages": [
+        3
+      ]
+    },
+    {
+      "id": "QA-05",
+      "question": "Which components depend on the NvM and for what?",
+      "expected_answer": "WindowLiftSWC (C-02) persists anti-pinch thresholds; SeatAdjustSWC (C-05) persists memory profiles (DEP-15, DEP-16).",
+      "gold_sections": [
+        "6.1",
+        "6.2.15",
+        "6.2.16"
+      ],
+      "gold_pages": [
+        14,
+        15,
+        15
+      ]
+    },
+    {
+      "id": "QA-06",
+      "question": "What is the trigger and flow of the Keyless Unlock function?",
+      "expected_answer": "Trigger: authenticated key approach detected. Flow: KeylessEntrySWC -> BodyControlSWC -> DoorControlSWC -> IoHwAb.",
+      "gold_sections": [
+        "7.3"
+      ],
+      "gold_pages": [
+        17
+      ]
+    },
+    {
+      "id": "QA-07",
+      "question": "Which interface does WindowLiftSWC provide and which components consume it?",
+      "expected_answer": "WindowStatusIF (IF-03), consumed by BodyControlSWC (C-08).",
+      "gold_sections": [
+        "4.3"
+      ],
+      "gold_pages": [
+        9
+      ]
+    },
+    {
+      "id": "QA-08",
+      "question": "What datatype and unit does the WindowPosition signal have?",
+      "expected_answer": "uint8, measured in percent (%).",
+      "gold_sections": [
+        "5"
+      ],
+      "gold_pages": [
+        13
+      ]
+    },
+    {
+      "id": "QA-09",
+      "question": "Which components require IoHwAb inputs?",
+      "expected_answer": "DoorControlSWC, WindowLiftSWC, MirrorAdjustSWC, LightControlSWC, and SeatAdjustSWC (DEP-20..DEP-24).",
+      "gold_sections": [
+        "6.1"
+      ],
+      "gold_pages": [
+        14
+      ]
+    },
+    {
+      "id": "QA-10",
+      "question": "How many components are in the Application layer and what are their IDs?",
+      "expected_answer": "Ten components: C-01 through C-10.",
+      "gold_sections": [
+        "2",
+        "3.1"
+      ],
+      "gold_pages": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": "QA-11",
+      "question": "What does the EcuM require from the CanSm?",
+      "expected_answer": "During shutdown, EcuM requires communication channel control from the CanSm (DEP-17).",
+      "gold_sections": [
+        "6.2.17"
+      ],
+      "gold_pages": [
+        15
+      ]
+    },
+    {
+      "id": "QA-12",
+      "question": "Which flows include the CanDriver?",
+      "expected_answer": "Door Lock Actuation (FL-1), One-Touch Window Lift (FL-2), and Bus-Off Recovery (FL-5).",
+      "gold_sections": [
+        "7.1",
+        "7.2",
+        "7.5"
+      ],
+      "gold_pages": [
+        17,
+        17,
+        17
+      ]
+    },
+    {
+      "id": "QA-13",
+      "question": "What is stored in NVRAM according to the assumptions?",
+      "expected_answer": "Up to three seat memory profiles per user (assumption A2).",
+      "gold_sections": [
+        "8.1"
+      ],
+      "gold_pages": [
+        18
+      ]
+    },
+    {
+      "id": "QA-14",
+      "question": "Which interface does the DiagManager use for diagnostic requests?",
+      "expected_answer": "DiagRequestIF (IF-22), provided by DiagManager (C-19) and consumed by RteAdapter (C-11).",
+      "gold_sections": [
+        "4.22"
+      ],
+      "gold_pages": [
+        11
+      ]
+    },
+    {
+      "id": "QA-15",
+      "question": "What safety interlock does the BodyControlSWC apply using vehicle speed?",
+      "expected_answer": "Anti-pinch interlocks: commands are released only when vehicle speed interlocks permit; anti-pinch is mandatory below 5 km/h (A3).",
+      "gold_sections": [
+        "2",
+        "8.1"
+      ],
+      "gold_pages": [
+        3,
+        18
+      ]
+    },
+    {
+      "id": "QA-16",
+      "question": "Which signals belong to the IoHwDoorIF interface?",
+      "expected_answer": "DoorSwitchRaw (uint8) and WindowMotorCurrent (uint16, mA).",
+      "gold_sections": [
+        "4.23",
+        "5"
+      ],
+      "gold_pages": [
+        11,
+        13
+      ]
+    },
+    {
+      "id": "QA-17",
+      "question": "Who consumes the VehicleModeIF interface?",
+      "expected_answer": "BodyControlSWC (C-08), DoorControlSWC (C-01), and WindowLiftSWC (C-02).",
+      "gold_sections": [
+        "4.12"
+      ],
+      "gold_pages": [
+        10
+      ]
+    },
+    {
+      "id": "QA-18",
+      "question": "What happens when the CAN controller enters bus-off?",
+      "expected_answer": "CanDriver reports the fault, CanSm executes the recovery sequence, and EcuM is informed (FL-5).",
+      "gold_sections": [
+        "7.5"
+      ],
+      "gold_pages": [
+        17
+      ]
+    },
+    {
+      "id": "QA-19",
+      "question": "Which component provides the EcuModeIF and who consumes it?",
+      "expected_answer": "Provided by EcuM (C-18); consumed by CanSm (C-16) and Com (C-12).",
+      "gold_sections": [
+        "4.21"
+      ],
+      "gold_pages": [
+        11
+      ]
+    },
+    {
+      "id": "QA-20",
+      "question": "Describe the Seat Memory Recall flow.",
+      "expected_answer": "NvM provides the persisted profile, SeatAdjustSWC computes motor targets, BodyControlSWC arbitrates, IoHwAb drives the seat motors (FL-4).",
+      "gold_sections": [
+        "7.4"
+      ],
+      "gold_pages": [
+        17
+      ]
+    },
+    {
+      "id": "QA-21",
+      "question": "What is the CAN bus bit rate assumption?",
+      "expected_answer": "500 kbit/s (assumption A1).",
+      "gold_sections": [
+        "8.1"
+      ],
+      "gold_pages": [
+        18
+      ]
+    },
+    {
+      "id": "QA-22",
+      "question": "Which components communicate over the ComPduRIF?",
+      "expected_answer": "Com (C-12) provides it; PduR (C-13) consumes it.",
+      "gold_sections": [
+        "4.16"
+      ],
+      "gold_pages": [
+        11
+      ]
+    },
+    {
+      "id": "QA-23",
+      "question": "How does the Door Lock Actuation flow start and which component debounces the switch input?",
+      "expected_answer": "It starts when the driver operates the door lock switch; IoHwAb debounces the raw input (FL-1).",
+      "gold_sections": [
+        "7.1"
+      ],
+      "gold_pages": [
+        17
+      ]
+    },
+    {
+      "id": "QA-24",
+      "question": "Which dependency IDs link application SWCs to the BodyControlSWC for commands?",
+      "expected_answer": "DEP-01 (Door), DEP-02 (Window), DEP-03 (Mirror), DEP-04 (Seat), DEP-05 (Climate).",
+      "gold_sections": [
+        "6.1"
+      ],
+      "gold_pages": [
+        14
+      ]
+    },
+    {
+      "id": "QA-25",
+      "question": "What does the SpeedProviderSWC do?",
+      "expected_answer": "It provides filtered vehicle speed for anti-pinch and child-lock interlocks.",
+      "gold_sections": [
+        "3.2.10"
+      ],
+      "gold_pages": [
+        6
+      ]
+    },
+    {
+      "id": "QA-26",
+      "question": "Which interface carries the CanFrame signal?",
+      "expected_answer": "PduCanIfIF (IF-17).",
+      "gold_sections": [
+        "4.17",
+        "5"
+      ],
+      "gold_pages": [
+        11,
+        13
+      ]
+    },
+    {
+      "id": "QA-27",
+      "question": "What is an R-port and which component has R-ports on VehicleModeIF?",
+      "expected_answer": "An R-port is a required port; BodyControlSWC, DoorControlSWC, and WindowLiftSWC hold R-ports on VehicleModeIF.",
+      "gold_sections": [
+        "1.5",
+        "4.12"
+      ],
+      "gold_pages": [
+        2,
+        10
+      ]
+    },
+    {
+      "id": "QA-28",
+      "question": "How many signals are in the signal dictionary?",
+      "expected_answer": "34 signals (SG-001 through SG-034).",
+      "gold_sections": [
+        "5"
+      ],
+      "gold_pages": [
+        13
+      ]
+    },
+    {
+      "id": "QA-29",
+      "question": "Which BSW module routes PDUs between COM and CanIf?",
+      "expected_answer": "PduR (C-13).",
+      "gold_sections": [
+        "3.1",
+        "3.2.13"
+      ],
+      "gold_pages": [
+        4,
+        7
+      ]
+    },
+    {
+      "id": "QA-30",
+      "question": "What is out of scope of this HLD?",
+      "expected_answer": "Detailed timing analysis, AUTOSAR OS configuration, and ECU resource files.",
+      "gold_sections": [
+        "1.2"
+      ],
+      "gold_pages": [
+        2
+      ]
+    }
+  ],
+  "unanswerable_questions": [
+    {
+      "id": "QA-U1",
+      "question": "What is the brake pressure of the front axle?",
+      "reason": "Braking system is not part of the body domain HLD."
+    },
+    {
+      "id": "QA-U2",
+      "question": "Which AUTOSAR OS task scheduling is configured?",
+      "reason": "OS configuration is explicitly out of scope (Section 1.2)."
+    },
+    {
+      "id": "QA-U3",
+      "question": "What is the price of the ABC ECU?",
+      "reason": "Commercial data is not in an HLD."
+    },
+    {
+      "id": "QA-U4",
+      "question": "How is the airbag deployment logic implemented?",
+      "reason": "Airbag functions are not part of this architecture."
+    }
+  ],
+  "defect_catalogue": {
+    "D1_removed_dependency": {
+      "description": "DEP-19 (DiagManager requires RteAdapter) removed in v2 without any replacement path.",
+      "kind": "removed_dependency"
+    },
+    "D2_stale_component_reference": {
+      "description": "VehicleModeSWC renamed to VehicleModeMgrSWC (C-09), but IF-12 section still references the old name in one table cell.",
+      "kind": "stale_reference"
+    },
+    "D3_conflicting_provider": {
+      "description": "IF-13 VehicleSpeedIF claims a second provider (C-08) in its interface table while section text still says C-10.",
+      "kind": "conflicting_provider"
+    },
+    "D4_orphan_component": {
+      "description": "SeatAdjustSWC (C-05) left with no interfaces/dependencies in v2 (all its links removed).",
+      "kind": "orphan_component"
+    },
+    "D5_dropped_signal_referenced": {
+      "description": "SG-015 KeyAuthStatus removed from IF-11 in v2, but the IF-11 section text still describes it.",
+      "kind": "dropped_signal_reference"
+    },
+    "D6_contradictory_statement": {
+      "description": "v2 text states ClimateInterfaceSWC 'does not require any interface from the BodyControlSWC' while DEP-05 remains listed.",
+      "kind": "contradiction"
+    },
+    "D7_port_count_mismatch": {
+      "description": "IF-04 section prose says WindowCommandIF has 2 ports, but its port table lists 3.",
+      "kind": "prose_table_mismatch"
+    },
+    "D8_new_consumer_of_changed_interface": {
+      "description": "IF-03 WindowStatusIF gains a new consumer C-04 (LightControlSWC) in v2 \u2014 impact-relevant change.",
+      "kind": "impact_relevant_change"
+    }
+  }
+}

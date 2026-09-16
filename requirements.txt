@@ -1,0 +1,25 @@
+# ArchSense — application dependencies
+# Python 3.11 on Windows. Install with: pip install -r requirements.txt
+
+# --- Persistence / core ---
+SQLAlchemy>=2.0,<3
+Pydantic>=2.7,<3
+python-dotenv>=1.0
+
+# --- Document ingestion (M1) ---
+PyMuPDF>=1.24
+pdfplumber>=0.11
+
+# --- Dataset generation (M0) ---
+reportlab>=4.0
+
+# --- Graph + UI (M5+) ---
+networkx>=3.3
+pyvis>=0.3.2
+streamlit>=1.37
+plotly>=5.22
+pandas>=2.0
+
+# --- Dev / test ---
+pytest>=8.0
+requests>=2.31
