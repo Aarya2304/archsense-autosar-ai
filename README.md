@@ -30,7 +30,7 @@ findings, and revision impact out. Human review stays in the loop.
 |---|---|---|
 | M0 | Synthetic dataset + ground truth | ✅ complete |
 | M1 | Page-aware PDF ingestion | ✅ complete |
-| M2 | Chunking, embedding benchmark, ChromaDB | ⏳ next |
+| M2 | Chunking, embedding benchmark, ChromaDB, retrieval + eval | ✅ complete |
 | M3–M8 | RAG → extraction → graph → analysis → diff → polish | planned |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
@@ -42,9 +42,49 @@ See `docs/IMPLEMENTATION_STATUS.md` for detail and
 python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements.txt   # Windows
 .venv/Scripts/python scripts/generate_dataset.py          # build synthetic HLDs + ground truth
-.venv/Scripts/python scripts/process_sample_docs.py       # ingest them
-.venv/Scripts/python -m pytest tests/                     # 47 tests
+.venv/Scripts/python scripts/process_sample_docs.py       # ingest them (M1)
+.venv/Scripts/python scripts/build_vector_index.py        # chunks -> embeddings -> ChromaDB (M2)
+.venv/Scripts/python scripts/evaluate_retrieval.py        # page_hit@K / MRR vs ground truth
+.venv/Scripts/python -m pytest tests/                     # 104 tests
 ```
+
+### Try retrieval (no LLM needed)
+
+```bash
+.venv/Scripts/python scripts/retrieve_demo.py "Which component provides VehicleSpeed?"
+.venv/Scripts/python scripts/retrieve_demo.py "door signals" --top-k 5 --version 1.0.0
+.venv/Scripts/python scripts/build_vector_index.py --model hashing   # zero-download mode
+```
+
+## M2 retrieval architecture
+
+```
+PDF ──(M1 ingestion)──> data/processed/*__processed.json
+        │ page-aware lines + tables + section map (D-008)
+        ▼
+chunker.py ── deterministic section-aware chunks (D-011)
+        │   prose: paragraph split -> ~500-token packs, ~75-token overlap
+        │   tables: standalone linearized chunks (anchor-line attribution, D-012)
+        │   provenance: doc, version, sha256, section, pages, seq, type
+        ▼
+embedder.py ── EmbeddingProvider (D-013)
+        │     default: all-MiniLM-L6-v2 (benchmark D-014); hashing for tests
+        ▼
+vector_store.py ── VectorStore protocol -> ChromaDB (cosine, data/vectors/)
+        │          deterministic chunk IDs -> re-index = upsert, no duplicates
+        ▼
+retriever.py ── retrieve(query, top_k, filters)
+               filters: document_name / version / section_no / chunk_type /
+               sha256 (+ page-range post-filter)
+```
+
+**Embedding benchmark (D-014, this corpus, CPU):** all-MiniLM-L6-v2 0.800
+page-hit@5 at 159 texts/s · bge-small-en 0.800 @ 41 t/s · e5-small-v2 0.800
+@ 49 t/s · bge-m3 0.867 @ 3 t/s · lexical hashing baseline 0.900 @ 3758 t/s.
+MiniLM selected (tied quality, 3–4× faster); M3 adds hybrid lexical+dense
+fusion because the QA vocabulary is lexical-heavy. Full methodology and
+numbers: `docs/PROJECT_DECISIONS.md` D-014,
+`data/evaluation/embedding_benchmark.json` (git-ignored).
 
 ## Repository layout
 
@@ -52,7 +92,8 @@ python -m venv .venv
 backend/
   dataset/       M0: source-of-truth model, PDF renderer, ground truth
   ingestion/     M1: parsing, cleaning, sections, tables, OCR hook, pipeline
-  rag/           M2/M3: chunker, embedder, vector store, retriever, LLM
+  rag/           M2: chunker, embedder, benchmark, vector store, retriever,
+                 indexing, evaluation  (M3 adds: llm/, citation validation)
   extraction/    M4: deterministic + LLM structured extraction
   graph/         M5: NetworkX builder + pyvis rendering
   analysis/      M6: deterministic + LLM checks
@@ -60,10 +101,11 @@ backend/
   storage/       SQLite schema, sessions, audit log
   services/      application layer (UI-agnostic business logic)
 app/             Streamlit UI (M8)
-scripts/         dataset generation, ingestion, evaluation, acceptance run
-tests/           pytest suite (47 tests green at M1)
+scripts/         dataset generation, ingestion, indexing, evaluation, demo
+tests/           pytest suite (104 tests green at M2; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
-data/            generated artifacts (gitignored except fixtures)
+data/            generated artifacts (gitignored: processed/, vectors/,
+                 evaluation/, db/)
 ```
 
 ## Governance principles (from the case study)

@@ -149,10 +149,14 @@ def _on_page(canvas, doc):  # noqa: ANN001 - reportlab callback
 
 
 def _build_template(path: Path, version: str) -> BaseDocTemplate:
+    import reportlab.rl_config as rl_config
+
+    rl_config.invariant = True  # deterministic PDF /ID + timestamps (D-015)
     doc = BaseDocTemplate(str(path), pagesize=A4,
                           leftMargin=15 * mm, rightMargin=15 * mm,
                           topMargin=18 * mm, bottomMargin=16 * mm,
-                          title=M.DOC_TITLE, author=M.DOC_ORG)
+                          title=M.DOC_TITLE, author=M.DOC_ORG,
+                          invariant="D:20260101000000Z")
     doc._as_version = version  # type: ignore[attr-defined]
     frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height,
                   id="main")

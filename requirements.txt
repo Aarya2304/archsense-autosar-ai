@@ -10,6 +10,12 @@ python-dotenv>=1.0
 PyMuPDF>=1.24
 pdfplumber>=0.11
 
+# --- RAG foundation (M2) ---
+# Versions pinned to what the M2 milestone was built/tested against.
+chromadb>=1.0,<2
+sentence-transformers>=5.0,<7
+numpy>=2.0,<2.3
+
 # --- Dataset generation (M0) ---
 reportlab>=4.0
 
