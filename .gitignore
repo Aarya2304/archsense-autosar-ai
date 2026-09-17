@@ -62,3 +62,4 @@ Thumbs.db
 
 # --- Freebuff ---
 .freebuff/
+data/external_test/
