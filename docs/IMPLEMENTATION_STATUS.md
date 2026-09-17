@@ -1,7 +1,7 @@
 # IMPLEMENTATION_STATUS
 
-**Updated:** 2026-09-17 (M0 + M1 + M2 + M3 + M4 complete)
-**Deadline:** 2026-09-26 · **Gate:** M5 starts after user review of this M4 report.
+**Updated:** 2026-09-17 (M0 + M1 + M2 + M3 + M4 + M5 complete)
+**Deadline:** 2026-09-26 · **Gate:** M6 starts after user review of this M5 report.
 
 ---
 
@@ -95,17 +95,19 @@
 
 ## Currently implementing
 
-- *(nothing — M4 complete, stopped at the milestone gate)*
+- *(nothing — M5 complete, stopped at the milestone gate)*
 
 ## Next up (requires approval)
-- M5: architecture graph explorer — NetworkX nodes/edges built directly
-  from the M4 registry (typed tables + `extraction_facts`), pyvis
-  rendering, citation-provenance attached to every relationship.
+- M6: deterministic consistency/completeness checks over the registry +
+  graph (undefined references, dangling requires, duplicates, conflicting
+  providers, orphans, unconsumed signals) with human-review workflow —
+  `backend/graph/validation.py` already provides the dangling/orphan
+  primitives and the Finding schema/tables exist since M1.
 
 ## Test status
 
 ```
-252 passed, 1 deselected (~19s)       # default: fast + deterministic suite
+300 passed, 1 deselected (~46s)       # default: fast + deterministic suite
 1 passed (opt-in, real MiniLM)        # pytest -m model (HF download)
 
 tests/test_dataset_integrity.py   21 passed
@@ -122,6 +124,8 @@ tests/test_rag_copilot.py         23 passed   (M3, incl. 1 hardening regression)
 tests/test_extraction_schema_deterministic.py 24 passed (M4)
 tests/test_extraction_llm.py      17 passed   (M4)
 tests/test_extraction_service_storage.py 20 passed (M4)
+tests/test_graph_builder.py       41 passed   (M5)
+tests/test_graph_viz_eval.py      13 passed   (M5)
 ```
 
 ## M4 — Structured extraction (this milestone)
@@ -213,6 +217,79 @@ Evidence gate calibration (one-shot grid, D-019,
   them; measured and reported in D-019)
 - Cost: **1 false refusal** (QA-21, coverage 0.22) of 30 answerable
 
+## M5 — Architecture Graph Explorer (this milestone)
+- [x] **Derived-only graph (D-026)** `backend/graph/builder.py`: nodes
+      from the six typed registry tables, edges 1:1 from
+      `extraction_facts`; nothing persisted, nothing invented
+- [x] **MultiDiGraph keyed by fact_key (D-027)** — parallel facts can
+      never collapse; capacity test proves 2 facts on one pair stay 2
+      edges; direction follows the D-021 predicate table exactly
+- [x] **Version-scoped builds (D-029)** — explicit `version=` required
+      (fail-fast), SQL-filtered nodes AND edges; cross-version
+      contamination impossible through the API (tested: DEP-19, IF-08/09,
+      SG-015 absent from v2 graph)
+- [x] **Trusted provenance on every edge (D-028)** — frozen snapshot
+      (document/version/section/pages/chunk) + confidence + extractor;
+      provenance verified against registry rows; survives filtering,
+      JSON export and HTML popups verbatim
+- [x] **Mechanical validation** `validation.py`: dangling endpoints
+      (NX auto-node-aware), invalid predicates, missing/version-mismatched
+      provenance, duplicate fact identities, registry↔graph 1:1
+      cross-check, canonical-key warnings, orphan detection with the
+      D-030 dependency exemption (v2's planted C-05 surfaces as warning)
+- [x] **Analysis** `analysis.py`: degrees, directed/undirected neighbors,
+      predecessors/successors, shortest path (directed default), weakly
+      connected components, related-view grouped by predicate with
+      provenance, friendly-key resolution (C-02 / component:C-02 /
+      display name)
+- [x] **Filtering** `filtering.py`: entity_type / predicate /
+      min_confidence / ego-neighbourhood with depth / version assert —
+      all non-mutating, attributes preserved verbatim
+- [x] **Export** `export.py`: node-link JSON (statistics included,
+      re-hydratable) + GraphML with flattened provenance citation line
+- [x] **pyvis visualization** `visualization.py`: standalone HTML with
+      inlined vis-network (no CDN), UTF-8 write (bypasses pyvis's
+      cp1252 save bug), per-type node colors, per-predicate edge colors,
+      provenance/confidence/extractor in every edge popup; dead template
+      resource blocks stripped — zero external references
+- [x] **GraphService** `service.py`: build/validate/filter/related/path/
+      stats/export/render façade for CLI, M6/M7 and M8
+- [x] **CLIs**: `scripts/graph_explorer.py` (--stats/--related/--path/
+      --predicate/--type/--confidence/--node+--depth/--render/--json/
+      --export-graphml) and `scripts/evaluate_graph.py` (both versions,
+      human + --json)
+- [x] **Evaluation (M5.20)** `evaluation.py`: gold derived mechanically
+      from GT registries; **nodes and edges P=R=F1=1.000 on BOTH
+      versions** (165/200 and 149/178), version isolation clean,
+      provenance correctness 1.000, registry↔graph 1:1 (0 missing/
+      extra/duplicate), eval ≈ 1 ms
+- [x] **Tests**: 54 new (builder/provenance/validation/analysis/
+      filtering/export/service 41, viz/eval 13); all 252 pre-M5 tests
+      still pass → 300 total
+
+## M5 performance (actual, per version)
+
+| stage | v1.0.0 | v1.1.0 |
+|---|---|---|
+| registry load + graph build | ~15–50 ms | ~15–50 ms |
+| validation (with registry cross-check) | <5 ms | <5 ms |
+| JSON export (~1 MB) | <40 ms | <40 ms |
+| pyvis HTML render (~830 KB) | ~300 ms | ~300 ms |
+| evaluation | ~1 ms | ~1 ms |
+
+## M5 known limitations
+- The 1.000 graph scores inherit M4's perfect extraction on the synthetic
+  corpus; real HLDs will not score 1.000.
+- No all-versions graph mode (deliberate, D-029); M7 will add explicit
+  version-labeled comparison instead.
+- GraphML provenance is flattened to a text line (format limitation);
+  JSON export is the lossless machine format.
+- pyvis 0.3.2 template carries dead resource blocks; `render_html`
+  strips them (strip patterns documented in D-030/open items — recheck
+  on pyvis upgrades).
+- Dependency entities render as degree-0 nodes (D-030 semantics); the
+  M8 UI may visually de-emphasize them.
+
 ## Known bugs
 
 - *(none open)* — M4 fixes during development: LLM parse/provider failures
@@ -237,8 +314,8 @@ Evidence gate calibration (one-shot grid, D-019,
 |---|---|---|---|
 | M3 | Hybrid RAG + citation validator + refusal | Sep 19 | ✅ complete |
 | M4 | Structured extraction + registry + evaluation | Sep 20 | ✅ complete |
-| M5 | Graph explorer from the extraction registry | Sep 21 | next |
-| M6 | Deterministic checks + findings review UI | Sep 22 | — |
+| M5 | Graph explorer from the extraction registry | Sep 21 | ✅ complete |
+| M6 | Deterministic checks + findings review UI | Sep 22 | next |
 | M7 | Revision compare + impact | Sep 23 | — |
 | M8 | Polish, export, evaluation harness, acceptance test | Sep 24 | — |
 | — | Docs, traceability matrix, Drive submission | Sep 25 | — |
@@ -256,6 +333,12 @@ Evidence gate calibration (one-shot grid, D-019,
   prints the full traceability chain for any fact (chunk → document →
   version → section → page), and extraction scores P=R=F1=1.000 against
   the ground truth on both HLD versions — quantitative, not anecdotal.
+- M5 adds the visual demo: `graph_explorer.py --version 1.0.0 --render`
+  produces a standalone interactive HTML (no internet needed — open the
+  file from a USB stick); hovering ANY edge shows document, version,
+  section, page and chunk id — "where does this relationship come from?"
+  answered in one hover. `--related C-02` and `--path C-02 IF-01` give
+  the deterministic query story; `evaluate_graph.py` shows P=R=F1=1.000.
 - Everything regenerates from scratch in <60 s via the three dataset
   commands; extraction runs in ~17 ms per version (deterministic, no LLM);
   registry persistence ~0.3 s per version.

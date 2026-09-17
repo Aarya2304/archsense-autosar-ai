@@ -33,7 +33,8 @@ findings, and revision impact out. Human review stays in the loop.
 | M2 | Chunking, embedding benchmark, ChromaDB, retrieval + eval | ✅ complete |
 | M3 | Hybrid retrieval + cited RAG copilot + refusal gate | ✅ complete |
 | M4 | Structured extraction + SQLite registry + evaluation | ✅ complete |
-| M5–M8 | Graph → analysis → diff → polish | planned |
+| M5 | Architecture Graph Explorer (NetworkX + pyvis) | ✅ complete |
+| M6–M8 | Analysis → diff → polish | planned |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
 `docs/PROJECT_DECISIONS.md` for every major design decision.
@@ -47,7 +48,7 @@ python -m venv .venv
 .venv/Scripts/python scripts/process_sample_docs.py       # ingest them (M1)
 .venv/Scripts/python scripts/build_vector_index.py        # chunks -> embeddings -> ChromaDB (M2)
 .venv/Scripts/python scripts/evaluate_retrieval.py        # page_hit@K / MRR vs ground truth
-.venv/Scripts/python -m pytest tests/                     # 252 tests
+.venv/Scripts/python -m pytest tests/                     # 300 tests
 ```
 
 ### Ask the copilot (M3, offline by default)
@@ -185,6 +186,67 @@ query_entities.py ── queryable structured knowledge with full traceability:
     fact -> chunk -> document -> version -> section -> page
 ```
 
+### Architecture Graph Explorer (M5, fully offline)
+
+```bash
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --stats
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --related C-02
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --path C-02 IF-01
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --predicate requires
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --type component
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --confidence 0.95
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --node C-02 --depth 1
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --render          # pyvis HTML -> data/exports/
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --json           # node-link JSON -> data/graphs/
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --export-graphml
+.venv/Scripts/python scripts/evaluate_graph.py                   # P/R/F1 vs ground truth, both versions
+```
+
+Example (`--stats --related C-02 --path C-02 IF-01` on v1.0.0):
+
+```
+== graph v1.0.0 ==
+  nodes: 165  edges: 200  (build 46.2 ms)
+  nodes by type: component=20, interface=25, port=57, signal=34, dependency=24, functional_flow=5
+  edges by predicate: carries=34, depends_on=24, implements=57, participates_in=28, provides=25, requires=32
+== related: component:C-02 (component) — 11 relationships
+  component:C-02 -[depends_on]-> component:C-08   conf=0.95  ABC_HLD_v1.0.0.pdf s6.1 p14 chunk 7ca59d9a5ce9
+  component:C-02 -[provides]-> interface:IF-03    conf=0.90  ABC_HLD_v1.0.0.pdf s4.3 p9  chunk 629161b96e98
+  ...
+== path: component:C-02 -> component:C-08 -> interface:IF-01
+```
+
+The graph is **derived, never authored** (D-026): nodes come from the M4
+typed registry tables, edges 1:1 from `extraction_facts` rows keyed by
+`fact_key` (a `MultiDiGraph`, so distinct facts never collapse, D-027).
+Every edge carries the trusted provenance snapshot (document, version,
+section, page range, chunk id, confidence, extractor) rendered into the
+pyvis edge popup — hover any relationship to see exactly which document
+page supports it (D-028). Graphs are strictly version-scoped
+(`--version 1.0.0` vs `--version 1.1.0`, D-029).
+
+**Measured** (`scripts/evaluate_graph.py`): nodes and edges
+**P=R=F1=1.000 on both versions** (165/200 and 149/178 expected), version
+isolation clean, provenance correctness **1.000**, registry↔graph 1:1
+(0 missing, 0 extra, 0 duplicate fact keys), build ≈ 15–50 ms per version.
+Report: `data/evaluation/graph_evaluation.json`.
+
+## M5 graph architecture
+
+```
+SQLite registry (M4: typed tables + extraction_facts)   <- source of truth
+    ▼ builder.py (version-scoped SQL join, D-026)
+MultiDiGraph
+    nodes: component:C-02 ... (typed attrs, confidence, display name)
+    edges: fact_key-keyed, predicate + trusted provenance dict (D-027/D-028)
+    ▼ validation.py (mechanical)   analysis.py (degree/path/components)
+    ▼ filtering.py (type/predicate/confidence/ego-depth, non-mutating)
+    ├─► export.py ── node-link JSON (data/graphs/) + GraphML
+    └─► visualization.py ── pyvis standalone HTML (data/exports/)
+            inlined vis-network (no CDN), UTF-8, provenance edge popups
+    ▼ GraphService (service.py) ── the typed facade for CLI/M6/M7/M8
+```
+
 ## Repository layout
 
 ```
@@ -197,18 +259,20 @@ backend/
                  copilot, llm/ (mock | openrouter | ollama)
   extraction/    M4: schema, deterministic extractor, LLM extraction,
                  validator, registry persistence, service, evaluation
-  graph/         M5: NetworkX builder + pyvis rendering
+  graph/         M5: MultiDiGraph builder, validation, analysis, filtering,
+                 JSON/GraphML export, pyvis rendering, service, evaluation
   analysis/      M6: deterministic + LLM checks
   diff/          M7: revision comparator + impact
   storage/       SQLite schema, sessions, audit log
   services/      application layer (UI-agnostic business logic)
 app/             Streamlit UI (M8)
 scripts/         dataset generation, ingestion, indexing, evaluation,
-                 copilot CLI, gate calibration, extraction + registry CLIs
-tests/           pytest suite (252 tests green at M4; opt-in model tests)
+                 copilot CLI, gate calibration, extraction + registry CLIs,
+                 graph explorer + graph evaluation
+tests/           pytest suite (300 tests green at M5; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
 data/            generated artifacts (gitignored: processed/, vectors/,
-                 evaluation/, db/)
+                 evaluation/, db/, graphs/, exports/)
 ```
 
 ## Governance principles (from the case study)

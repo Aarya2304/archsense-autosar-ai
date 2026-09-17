@@ -1,7 +1,7 @@
 # PROJECT_DECISIONS
 
 **Project:** ArchSense — AUTOSAR HLD Document Analysis Assistant (Tata Pulse Case Study 1 pilot)
-**Created:** 2026-09-16 · **Status:** M0–M4 complete (M4 pending user review)
+**Created:** 2026-09-16 · **Status:** M0–M5 complete (M5 pending user review)
 **Rule:** Every major technical decision is recorded here with reason,
 alternatives considered, and consequences. Superseded decisions are struck
 through, not deleted.
@@ -446,15 +446,103 @@ python -m venv .venv
 
 ---
 
+## D-026 — Graph is derived from the registry, never a second truth (M5)
+- **Decision:** The M5 graph subsystem (`backend/graph/`) builds a
+  NetworkX MultiDiGraph at request time directly from the M4 SQLite
+  registry: nodes from the six typed entity tables, edges 1:1 from
+  `extraction_facts` rows. No graph is persisted as source of truth; no
+  relationship is ever invented, inferred, or LLM-supplied. `GraphService`
+  is the only façade callers need.
+- **Reason:** the brief's central M5 principle (registry → graph, not
+  PDF → separate graph extraction); a persisted graph would fork truth
+  the moment extraction is re-run.
+- **Alternatives:** persisting node-link JSON as the working store (drift);
+  Neo4j (out of scope since D-006; ~350-node corpus).
+- **Consequences:** graphs are always reproducible (build ≈ 15–50 ms);
+  M6 checks and M7 diff can query the registry OR the graph and agree by
+  construction; JSON export to `data/graphs/` is an artifact, not a store.
+
+## D-027 — MultiDiGraph keyed by M4 fact identity (M5)
+- **Decision:** Graph type = `networkx.MultiDiGraph`; every edge is keyed
+  by the M4 `fact_key` (the dedupe identity), preserving parallel facts
+  (two distinct facts between the same ordered node pair remain two
+  edges). Direction follows the M4 predicate table exactly
+  (component→interface for provides/requires, component→component
+  depends_on, interface→signal carries, port→interface implements,
+  component→flow participates_in).
+- **Reason:** a plain DiGraph silently collapses distinct facts; M7's
+  graph diff must compare fact identities 1:1. The current corpus happens
+  to contain no two facts on the same ordered pair (each port implements
+  a distinct interface), but the guarantee must hold structurally, not by
+  corpus luck — verified by a dedicated capacity test.
+- **Alternatives:** DiGraph + edge-attribute lists (custom merge logic);
+  undirected graph (loses provides-vs-requires orientation semantics).
+- **Consequences:** all analysis is explicit about directed vs undirected
+  semantics (e.g. `shortest_path(directed=True)` default,
+  `neighbors_undirected` named as such); edge identity = fact_key enables
+  set-diff in M7 with zero reconciliation logic.
+
+## D-028 — Edge provenance: trusted registry snapshot on every edge (M5)
+- **Decision:** Every graph edge carries a frozen provenance snapshot
+  (document, version, section_no/title, page range, chunk id) taken from
+  the `extraction_facts` columns — the SAME trusted chain M4 persisted —
+  plus confidence and extractor. The pyvis edge popup renders it; no LLM
+  output ever contributes provenance.
+- **Reason:** continues D-018/D-022: provenance is resolved from stored
+  metadata, never authored. "Where does this relationship come from?" must
+  answer with a page, not a guess.
+- **Alternatives:** looking provenance up lazily from the registry at
+  render time (couples viz to the DB); trusting viz-layer text.
+- **Consequences:** provenance survives filtering, JSON export, and HTML
+  rendering verbatim; `GraphService.edge_provenance()` gives M8 a one-call
+  citation lookup; GraphML flattens provenance to a citation line (GraphML
+  cannot hold nested dicts — documented lossiness).
+
+## D-029 — Version-scoped graphs by default (M5)
+- **Decision:** `build_graph(version=...)` REQUIRES an explicit version
+  label (fail-fast `ValueError` otherwise) and SQL-filters both nodes and
+  edges by `version_id`. Mixing versions is impossible through the API.
+- **Reason:** M7 (v1→v2 diff) depends on clean version separation; a
+  blended default graph would be a silent contamination risk.
+- **Alternatives:** an all-versions mode (documented as NOT provided —
+  no current consumer; adding one later is trivial and would label
+  nodes/edges per version explicitly).
+- **Consequences:** evaluation proves isolation per version (0 foreign
+  keys); v2's planted orphan C-05 correctly surfaces as a degree-0
+  warning while v1 has none.
+
+## D-030 — Dependency entities are degree-0 nodes by design (M5)
+- **Decision:** In the graph, `depends_on` edges connect the two
+  COMPONENTS directly (per the D-021 taxonomy); the DEP-nn dependency
+  entities appear as nodes carrying `source_id`/`target_id`/`relationship`
+  as METADATA and therefore have degree 0. Graph validation exempts
+  dependency-typed nodes from the orphan warning (with an explanatory
+  message) while still flagging real orphans (e.g. v2's planted C-05).
+- **Reason:** the corpus stores the dependency's own label ("requires")
+  as an attribute, not as a graph predicate — re-interpreting it as an
+  edge type would duplicate the depends_on edge with different semantics
+  (brief §27: preserve attributes, don't silently change meaning).
+- **Alternatives:** dependency→component "documents" edges (invented
+  predicate, violates derivation-only); hiding dependency entities from
+  the graph entirely (loses the entity registry mirror).
+- **Consequences:** 24 (v1) / 20 (v2) dependency nodes are degree-0
+  WITHOUT being findings; the validator's warning distinguishes the two
+  classes explicitly.
+
 ## Open items / pending decisions
 
-- **M5 architecture graph:** the extraction registry (typed tables +
-  `extraction_facts`) gives M5 its nodes/edges directly — NetworkX build +
-  pyvis render, citations attached to every relationship (D-025 joins).
 - **M6 checks as quality goals:** start with the high-confidence core
   (undefined refs, dangling requires, duplicates, conflicting providers,
-  orphans, unconsumed signals); the registry makes these SQL/graph queries.
+  orphans, unconsumed signals); the registry makes these SQL/graph queries
+  and `backend/graph/validation.py` already provides dangling/orphan
+  primitives to build on.
+- **M7 diff:** edge identity = `fact_key` (D-027) makes the v1→v2 edge
+  diff a set operation; node diff uses canonical keys directly.
 - **Real-provider smoke tests (copilot + extraction):** OpenRouter key not
   yet available; both `scripts/ask_copilot.py --provider openrouter` and
   `scripts/extract_entities.py --provider openrouter --llm` are ready to
   run once configured. Default model remains `google/gemma-3-27b-it:free`.
+- **pyvis 0.3.2 template hygiene:** its HTML template hardcodes two dead
+  resource blocks (commented node_modules/vis pair, cosmetic bootstrap CDN
+  tags); `render_html` strips them deterministically so exports are fully
+  resource-free. Re-check the strip patterns when upgrading pyvis.
