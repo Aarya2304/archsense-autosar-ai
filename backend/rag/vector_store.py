@@ -53,6 +53,13 @@ class VectorStore(Protocol):
         """Delete all vectors (development rebuild path)."""
         ...
 
+    def get_all_chunks(self) -> list[RetrievedChunk]:
+        """Every stored chunk with provenance (M3 lexical mirror index).
+
+        Order is unspecified; callers that need determinism sort before use.
+        """
+        ...
+
 
 def _decode_pages_csv(meta: dict[str, Any]) -> tuple[int, int]:
     """Recover (page_start, page_end) from the flat metadata payload."""
@@ -153,6 +160,37 @@ class ChromaVectorStore:
             return set()
         got = self._collection.get(include=[])
         return set(got.get("ids") or [])
+
+    def get_all_chunks(self) -> list[RetrievedChunk]:
+        """Every stored chunk as a ``RetrievedChunk`` (M3 lexical index)."""
+        n = self.count()
+        if n == 0:
+            return []
+        got = self._collection.get(
+            include=["documents", "metadatas"])
+        ids = got.get("ids") or []
+        docs = got.get("documents") or []
+        metas = got.get("metadatas") or []
+        hits: list[RetrievedChunk] = []
+        for i, chunk_id in enumerate(ids):
+            meta = dict(metas[i]) if i < len(metas) else {}
+            page_start, page_end = _decode_pages_csv(meta)
+            hits.append(RetrievedChunk(
+                chunk_id=chunk_id,
+                text=docs[i] if i < len(docs) else "",
+                distance=0.0,
+                similarity=0.0,
+                document_name=str(meta.get("document_name", "")),
+                version=str(meta.get("version", "")),
+                section_no=str(meta.get("section_no", "")),
+                section_title=str(meta.get("section_title", "")),
+                page_start=page_start,
+                page_end=page_end,
+                chunk_type=str(meta.get("chunk_type", "")),
+                chunk_seq=int(meta.get("chunk_seq", 0) or 0),
+                token_count=int(meta.get("token_count", 0) or 0),
+            ))
+        return hits
 
 
 def get_vector_store(collection_name: str = "archsense_chunks",

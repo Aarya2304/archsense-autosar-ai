@@ -4,6 +4,11 @@ These dataclasses are the contract between the M1 ingestion JSON, the
 chunker, the vector store and the retriever. M3 consumes ``RetrievedChunk``
 objects for citation-validated prompting, so provenance fields are
 first-class and mandatory.
+
+M3 note: ``RetrievedChunk``/``RetrievalResult`` gained optional score
+fields (lexical/rrf/ranks/sources and ``mode``). Dense-only retrieval leaves
+them at defaults and ``to_dict()`` omits them, so the M2 output contract is
+unchanged byte-for-byte.
 """
 
 from __future__ import annotations
@@ -37,7 +42,7 @@ class Chunk:
         """ChromaDB metadata payload (flat scalar dict, one list field).
 
         ChromaDB supports only scalar metadata values, so the ordered list
-        of pages is stored as a ";"-joined string (``pages_csv``).
+        of pages is stored as a ";\"-joined string (``pages_csv``).
         """
         return {
             "document_name": self.document_name,
@@ -80,6 +85,12 @@ class RetrievedChunk:
     chunk_type: str
     chunk_seq: int
     token_count: int
+    # --- M3 additions (dense-only retrievers leave these at defaults) ---
+    lexical_score: float | None = None   # BM25 score (lexical retriever)
+    rrf_score: float | None = None       # fused score (hybrid retriever)
+    dense_rank: int | None = None        # 1-based rank in the dense list
+    lexical_rank: int | None = None      # 1-based rank in the lexical list
+    sources: str = ""                    # e.g. "dense", "lexical+dense"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -96,6 +107,17 @@ class RetrievedChunk:
             "chunk_seq": self.chunk_seq,
             "token_count": self.token_count,
             "text": self.text,
+            # M3 extras: included only when a mode populated them, so M2
+            # dense-only output stays byte-identical to before.
+            **({"lexical_score": round(self.lexical_score, 4)}
+               if self.lexical_score is not None else {}),
+            **({"rrf_score": round(self.rrf_score, 4)}
+               if self.rrf_score is not None else {}),
+            **({"dense_rank": self.dense_rank}
+               if self.dense_rank is not None else {}),
+            **({"lexical_rank": self.lexical_rank}
+               if self.lexical_rank is not None else {}),
+            **({"sources": self.sources} if self.sources else {}),
         }
 
 
@@ -107,6 +129,10 @@ class RetrievalResult:
     chunks: list[RetrievedChunk] = field(default_factory=list)
     top_k: int = 5
     filters: dict[str, Any] = field(default_factory=dict)
+    # --- M3 additions (dense-only service leaves these at defaults) ---
+    mode: str = "dense"                  # "dense" | "lexical" | "hybrid"
+    dense_k: int | None = None           # candidate pool sizes used (hybrid)
+    lexical_k: int | None = None
 
     def to_dicts(self) -> list[dict[str, Any]]:
         out = [c.to_dict() for c in self.chunks]

@@ -1,7 +1,7 @@
 # PROJECT_DECISIONS
 
 **Project:** ArchSense — AUTOSAR HLD Document Analysis Assistant (Tata Pulse Case Study 1 pilot)
-**Created:** 2026-09-16 · **Status:** M0 + M1 + M2 complete (M2 pending user review)
+**Created:** 2026-09-16 · **Status:** M0 + M1 + M2 + M3 complete (M3 pending user review)
 **Rule:** Every major technical decision is recorded here with reason,
 alternatives considered, and consequences. Superseded decisions are struck
 through, not deleted.
@@ -235,17 +235,127 @@ python -m venv .venv
 ./.venv/Scripts/python.exe scripts/build_vector_index.py --rebuild
 ./.venv/Scripts/python.exe scripts/evaluate_retrieval.py
 ./.venv/Scripts/python.exe scripts/benchmark_embeddings.py
-./.venv/Scripts/python.exe -m pytest tests/        # 104 passed (1 opt-in)
+./.venv/Scripts/python.exe -m pytest tests/        # 195 passed (1 opt-in)
 ```
+
+## D-016 — Hybrid retrieval: in-memory BM25 + RRF fusion (M3.1/M3.2)
+- **Decision:** Hybrid retrieval = deterministic in-memory Okapi BM25
+  (k1=1.5, b=0.75, shared `[a-z0-9]+` tokenizer + static stop list) over a
+  mirror of the vector store, fused with dense results via Reciprocal Rank
+  Fusion (`RRF(d) = Σ 1/(rrf_k + rank(d))`, rrf_k=60, ranks from 1).
+  Ties break by (document_name, chunk_id); fusion is rank-based so raw
+  scores are never mixed. `HybridRetrievalService` exposes
+  hybrid/dense/lexical modes; hybrid is the copilot default, and the
+  wrapped M2 `RetrievalService` is untouched (dense-only path preserved).
+- **Reason:** D-014 showed lexical matching beats dense-only on this QA
+  corpus; RRF is the standard, score-scale-free way to combine both
+  without Elasticsearch-class infrastructure (D-006).
+- **Alternatives:** rank-bm25 dependency (adds a package for ~80 lines of
+  textbook code); score-level interpolation (requires score normalization,
+  model-dependent); Convex Combination fusion (same normalization issue).
+- **Consequences:** lexical index rebuilds automatically when the store
+  count changes (`ensure_index`); ~2.8 ms/query lexical, ~15 ms/query
+  hybrid; fused hits carry `rrf_score`, `sources`, and per-list ranks for
+  UI/audit use.
+
+## D-017 — LLM provider abstraction (M3.4–M3.6)
+- **Decision:** `LLMProvider` protocol (`generate(system, user) ->
+  LLMResponse[text, provider, model, latency_ms, usage, finish_reason]`)
+  with three implementations: `MockLLMProvider` (deterministic offline
+  evidence-extractor; default), `OpenRouterProvider` (OpenAI-compatible
+  chat completions, temperature 0), `OllamaProvider` (local server via its
+  `/v1/chat/completions` compatibility endpoint). Shared HTTP helper does
+  bounded retries on 429/5xx only; config errors fail fast at construction
+  with actionable messages; keys are never logged (redaction wrapper).
+- **Reason:** Copilot/UI code must stay provider-agnostic (D-006's single
+  provider interface); mock default keeps the repo runnable with zero
+  credentials and makes the entire validation pipeline deterministically
+  testable; `requests` was already a dependency, so no new packages.
+- **Alternatives:** LangChain LLM wrappers (drags the dependency in,
+  against D-006); provider SDKs (unnecessary); async providers (no
+  concurrency requirement in the MVP).
+- **Consequences:** swapping providers is a config change
+  (`LLM_PROVIDER=openrouter|ollama|mock`); real-provider behaviour is
+  verified through mocked HTTP in tests plus an optional live smoke test
+  (M3.16); no API key exists in the environment, so no live OpenRouter
+  call has been made yet (documented in IMPLEMENTATION_STATUS).
+
+## D-018 — Citation architecture: mechanical validation only (M3.8–M3.10)
+- **Decision:** Citations are evidence IDs (`E1`, `E2`, ...) assigned by
+  the context builder in retrieval-rank order. The LLM may reference them
+  inline (`[E1]`) and list them in `evidence_ids`, but every citation is
+  resolved mechanically against the trusted ID→chunk map; metadata
+  (document/version/section/pages/chunk id) is rendered exclusively from
+  stored chunk metadata; quotes are extracted mechanically (token-overlap
+  + difflib over the cited chunk's sentences), never written by the LLM.
+  A grounded (non-refusal) answer with zero surviving citations fails
+  validation, and ANY unknown evidence ID — inline `[En]` or declared in
+  `evidence_ids` — fails the whole response (regression-hardened after
+  review: one valid citation never rescues a fabricated one, e.g.
+  `"claim [E999] [E1]"` → `validation_failure`, citations emptied).
+  Structured JSON parsing tolerates fences/prose and degrades to an
+  explicit `validation_failure` state — never silent acceptance.
+- **Reason:** the case study's traceability requirement and the plan's
+  hard rule: the LLM is never the source of truth for provenance.
+- **Alternatives:** NLI-based citation verification (no local NLI model
+  within budget); asking the LLM to output page numbers directly (that is
+  exactly the hallucination we must prevent).
+- **Consequences:** the copilot emits four structured outcomes
+  (answered / insufficient_evidence / provider_failure /
+  validation_failure); every citation is reproducible from
+  (chunk_id, answer text) without the LLM.
+
+## D-019 — Evidence gate: two-layer defense, honestly calibrated (M3.11)
+- **Decision:** Pre-generation gate with three mechanical signals:
+  (1) lexical-hit floor (`min_lexical_score=0.25` on bounded BM25),
+  (2) IDF-weighted query-term coverage of the top-3 evidence chunks
+  (`min_query_coverage=0.30`, light stemming, fixed question-word list),
+  (3) optional lexical/dense agreement (default off — the calibrated grid
+  showed no marginal value). Post-generation, the LLM's structured
+  `insufficient_evidence` flag is the second layer. Thresholds were chosen
+  from a ONE-SHOT grid (`scripts/calibrate_gate.py`, output
+  `data/evaluation/gate_calibration.json`) and are not re-tuned.
+- **Reason — measured on this corpus:** QA-U1 (brake pressure) has zero
+  lexical hits; QA-U2 (OS scheduling) has 0.29 coverage — both are
+  mechanically refused. QA-U3 (price) / QA-U4 (airbag) are topically
+  adjacent and pass the gate **by design**: profiling showed NO
+  token-overlap signal separates them from answerable questions
+  (answerable coverage min 0.08–0.22 for QA-21/13/12 vs unanswerable max
+  0.42–0.49 — overlapping distributions), so refusing them requires
+  semantic judgment, which is the LLM layer's job. The chosen thresholds
+  cost 1 false refusal (QA-21, coverage 0.22).
+- **Alternatives:** strict thresholds (refuses up to 4 answerable
+  questions); LLM-only refusal (no pre-generation defense, wasted calls);
+  embedding-similarity floor (embedding-dependent, fragile across models).
+- **Consequences:** with the offline mock, 2 of 4 negatives are refused by
+  the gate and U3/U4-class questions are answered — a documented mock
+  limitation, not a pipeline gap; with a real provider, the structured
+  refusal path handles them (mechanics verified by tests). Not claimed:
+  hallucination-proofness, 100% refusal coverage.
 
 ## Open items / pending decisions
 
-- **M3 hybrid retrieval:** dense-only retrieval underperforms the lexical
-  baseline on this corpus (see D-014); M3 plans BM25/lexical + dense fusion
-  (RRF) inside the existing `RetrievalService` contract.
+- **M4 structured extraction:** deterministic + LLM hybrid over the same
+  chunk corpus; the LLM side reuses `LLMProvider` (D-017) and the
+  mechanical-validation pattern from D-018.
 - **M6 checks as quality goals:** start with the high-confidence core
   (undefined refs, dangling requires, duplicates, conflicting providers,
   orphans, unconsumed signals); add LLM-assisted checks only if meaningful.
-- **LLM model choice for M3:** default `google/gemma-3-27b-it:free` via
-  OpenRouter pending your API key; Ollama fallback config already stubbed
-  in `.env.example`.
+- **Real-provider smoke test:** OpenRouter key not yet available; run
+  `scripts/ask_copilot.py "..." --provider openrouter` once configured.
+  Default model remains `google/gemma-3-27b-it:free` (config-only change).
+
+## D-020 — M3 retrieval evaluation methodology (M3.3)
+- **Decision:** `scripts/compare_retrieval_modes.py` scores lexical,
+  dense and hybrid modes over the same 30-question GT set at K∈{1,3,5}
+  (page/section hit rates, MRR, latency), writing
+  `data/evaluation/retrieval_modes_comparison.json`. Same corpus, same
+  questions, deterministic; no threshold tuning on the eval set.
+- **Reason:** the M2 brief requires comparing modes and reporting
+  honestly whether hybrid improves the baseline.
+- **Alternatives:** only reporting the copilot end-state (would hide
+  retrieval regressions); fabricating per-question relevance judgments.
+- **Consequences — actual results (this corpus, MiniLM):** hybrid beats
+  dense-only on every metric (page_hit@5 0.867 vs 0.800; section_hit@5
+  0.833 vs 0.700; MRR@5 0.709 vs 0.658) and beats lexical at K=5 while
+  losing section_hit@1 to lexical (0.467 vs 0.500) — reported, not hidden.

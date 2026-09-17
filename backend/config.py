@@ -94,6 +94,35 @@ EMBEDDING_MODEL_CANDIDATES: list[str] = [
 CHUNK_TOKEN_TARGET: int = int(_env_str("CHUNK_TOKEN_TARGET", "500"))
 CHUNK_OVERLAP_RATIO: float = float(_env_str("CHUNK_OVERLAP_RATIO", "0.15"))
 
+# ------------------------------------------------------------ M3 knobs ----
+# Retrieval mode: "hybrid" (default, BM25 + dense fused with RRF), "dense",
+# or "lexical" (kept for testing/comparison).
+RETRIEVAL_MODE: str = _env_str("RETRIEVAL_MODE", "hybrid")
+HYBRID_LEXICAL_K: int = int(_env_str("HYBRID_LEXICAL_K", "20"))
+HYBRID_DENSE_K: int = int(_env_str("HYBRID_DENSE_K", "20"))
+HYBRID_RRF_K: int = int(_env_str("HYBRID_RRF_K", "60"))
+
+# Evidence gate (M3.11): retrieval-quality refusal policy, calibrated on
+# the 30 answerable + 4 unanswerable GT questions (D-019, one-shot grid in
+# data/evaluation/gate_calibration.json): mechanically refuses QA-U1 (zero
+# lexical match) and QA-U2 (low query coverage), 1 false refusal (QA-21);
+# QA-U3/U4 are topically adjacent and pass the gate by design -- they are
+# the LLM structured-refusal layer's job (defense in depth, not perfection).
+EVIDENCE_MIN_SCORE: float = float(_env_str("EVIDENCE_MIN_SCORE", "0.10"))
+EVIDENCE_MIN_HITS: int = int(_env_str("EVIDENCE_MIN_HITS", "1"))
+EVIDENCE_MIN_AGREEMENT: float = float(_env_str("EVIDENCE_MIN_AGREEMENT", "0.0"))
+EVIDENCE_MIN_LEXICAL_SCORE: float = float(_env_str("EVIDENCE_MIN_LEXICAL_SCORE", "0.25"))
+EVIDENCE_MIN_COVERAGE: float = float(_env_str("EVIDENCE_MIN_COVERAGE", "0.30"))
+
+# Answer max tokens passed to providers (all providers cap this).
+LLM_MAX_TOKENS: int = int(_env_str("LLM_MAX_TOKENS", "700"))
+
+# Which provider the copilot uses: "openrouter" | "ollama" | "mock".
+# Default is deliberately "mock" so the repo is runnable with zero
+# credentials; set to "openrouter" (with OPENROUTER_API_KEY in .env) for
+# real generation.
+LLM_PROVIDER: str = _env_str("LLM_PROVIDER", "mock")
+
 # --------------------------------------------------------- governance ------
 AUDIT_LOG_ENABLED: bool = _env_bool("AUDIT_LOG_ENABLED", True)
 HUMAN_REVIEW_REQUIRED: bool = _env_bool("HUMAN_REVIEW_REQUIRED", True)

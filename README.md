@@ -31,7 +31,8 @@ findings, and revision impact out. Human review stays in the loop.
 | M0 | Synthetic dataset + ground truth | ✅ complete |
 | M1 | Page-aware PDF ingestion | ✅ complete |
 | M2 | Chunking, embedding benchmark, ChromaDB, retrieval + eval | ✅ complete |
-| M3–M8 | RAG → extraction → graph → analysis → diff → polish | planned |
+| M3 | Hybrid retrieval + cited RAG copilot + refusal gate | ✅ complete |
+| M4–M8 | Extraction → graph → analysis → diff → polish | planned |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
 `docs/PROJECT_DECISIONS.md` for every major design decision.
@@ -45,18 +46,35 @@ python -m venv .venv
 .venv/Scripts/python scripts/process_sample_docs.py       # ingest them (M1)
 .venv/Scripts/python scripts/build_vector_index.py        # chunks -> embeddings -> ChromaDB (M2)
 .venv/Scripts/python scripts/evaluate_retrieval.py        # page_hit@K / MRR vs ground truth
-.venv/Scripts/python -m pytest tests/                     # 104 tests
+.venv/Scripts/python -m pytest tests/                     # 195 tests
 ```
 
-### Try retrieval (no LLM needed)
+### Ask the copilot (M3, offline by default)
 
 ```bash
-.venv/Scripts/python scripts/retrieve_demo.py "Which component provides VehicleSpeed?"
+.venv/Scripts/python scripts/ask_copilot.py "Which component provides the VehicleSpeed signal?"
+.venv/Scripts/python scripts/ask_copilot.py "What is the brake pressure of the front axle?"   # -> INSUFFICIENT EVIDENCE
+.venv/Scripts/python scripts/ask_copilot.py "..." --json                 # full structured record
+.venv/Scripts/python scripts/ask_copilot.py "..." --provider openrouter  # needs OPENROUTER_API_KEY in .env
+```
+
+The pipeline: **hybrid retrieval** (BM25 + dense fused with RRF) →
+**evidence gate** (mechanical refusal when the question has no terminological
+anchor in the corpus) → **grounded context** (rank-ordered evidence blocks) →
+**LLM** (structured JSON, temperature 0) → **mechanical citation validation**
+(evidence IDs resolved against trusted chunk metadata; fabricated IDs
+rejected; quotes extracted, never LLM-written).
+
+### Retrieval comparison + gate calibration
+
+```bash
+.venv/Scripts/python scripts/compare_retrieval_modes.py   # lexical vs dense vs hybrid
+.venv/Scripts/python scripts/calibrate_gate.py            # refusal-threshold grid (one-shot)
 .venv/Scripts/python scripts/retrieve_demo.py "door signals" --top-k 5 --version 1.0.0
 .venv/Scripts/python scripts/build_vector_index.py --model hashing   # zero-download mode
 ```
 
-## M2 retrieval architecture
+## M3 RAG architecture
 
 ```
 PDF ──(M1 ingestion)──> data/processed/*__processed.json
@@ -73,18 +91,36 @@ embedder.py ── EmbeddingProvider (D-013)
 vector_store.py ── VectorStore protocol -> ChromaDB (cosine, data/vectors/)
         │          deterministic chunk IDs -> re-index = upsert, no duplicates
         ▼
-retriever.py ── retrieve(query, top_k, filters)
-               filters: document_name / version / section_no / chunk_type /
-               sha256 (+ page-range post-filter)
+lexical.py + hybrid.py ── BM25 lexical mirror + dense search (D-016)
+        │   RRF fusion: RRF(d) = Σ 1/(rrf_k + rank(d)), rrf_k=60
+        │   modes: hybrid (default) | dense | lexical
+        ▼
+gate.py ── evidence gate (M3.11, D-019)
+        │   lexical-hit floor + IDF query coverage + agreement
+        │   refuse -> INSUFFICIENT EVIDENCE (no LLM call)
+        ▼
+context.py ── grounded evidence blocks [EVIDENCE E1..En] + rules (M3.7)
+        ▼
+llm/ ── LLMProvider: mock (default) | openrouter | ollama (D-017)
+        │   structured JSON: {answer, evidence_ids, insufficient_evidence}
+        ▼
+citations.py ── mechanical validation (M3.8–M3.10, D-018)
+        │   resolve [En] against trusted chunks; unknown IDs rejected;
+        │   quotes extracted mechanically; metadata never from the LLM
+        ▼
+copilot.py ── CopilotAnswer: answered | insufficient_evidence |
+             provider_failure | validation_failure
 ```
 
-**Embedding benchmark (D-014, this corpus, CPU):** all-MiniLM-L6-v2 0.800
-page-hit@5 at 159 texts/s · bge-small-en 0.800 @ 41 t/s · e5-small-v2 0.800
-@ 49 t/s · bge-m3 0.867 @ 3 t/s · lexical hashing baseline 0.900 @ 3758 t/s.
-MiniLM selected (tied quality, 3–4× faster); M3 adds hybrid lexical+dense
-fusion because the QA vocabulary is lexical-heavy. Full methodology and
-numbers: `docs/PROJECT_DECISIONS.md` D-014,
-`data/evaluation/embedding_benchmark.json` (git-ignored).
+**Retrieval comparison (D-020, 30 GT questions, MiniLM):** hybrid beats
+dense-only on every metric (page_hit@5 **0.867** vs 0.800; section_hit@5
+**0.833** vs 0.700; MRR@5 **0.709** vs 0.658) and beats lexical-only at
+K=5 (lexical keeps section_hit@1 and the latency crown at 2.8 ms).
+**Embedding benchmark (D-014):** all-MiniLM-L6-v2 0.800 page-hit@5 at
+159 texts/s · bge-small-en 0.800 @ 41 t/s · e5-small-v2 0.800 @ 49 t/s ·
+bge-m3 0.867 @ 3 t/s · lexical hashing baseline 0.900 @ 3758 t/s.
+Full methodology: `docs/PROJECT_DECISIONS.md` D-014/D-016/D-019/D-020;
+artifacts in `data/evaluation/` (git-ignored).
 
 ## Repository layout
 
@@ -93,7 +129,9 @@ backend/
   dataset/       M0: source-of-truth model, PDF renderer, ground truth
   ingestion/     M1: parsing, cleaning, sections, tables, OCR hook, pipeline
   rag/           M2: chunker, embedder, benchmark, vector store, retriever,
-                 indexing, evaluation  (M3 adds: llm/, citation validation)
+                 indexing, evaluation
+                 M3: lexical (BM25), hybrid (RRF), gate, context, citations,
+                 copilot, llm/ (mock | openrouter | ollama)
   extraction/    M4: deterministic + LLM structured extraction
   graph/         M5: NetworkX builder + pyvis rendering
   analysis/      M6: deterministic + LLM checks
@@ -101,8 +139,9 @@ backend/
   storage/       SQLite schema, sessions, audit log
   services/      application layer (UI-agnostic business logic)
 app/             Streamlit UI (M8)
-scripts/         dataset generation, ingestion, indexing, evaluation, demo
-tests/           pytest suite (104 tests green at M2; opt-in model tests)
+scripts/         dataset generation, ingestion, indexing, evaluation,
+                 copilot CLI, gate calibration
+tests/           pytest suite (195 tests green at M3; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
 data/            generated artifacts (gitignored: processed/, vectors/,
                  evaluation/, db/)
@@ -111,11 +150,17 @@ data/            generated artifacts (gitignored: processed/, vectors/,
 ## Governance principles (from the case study)
 
 - Outputs grounded in approved source documents with page/section citations.
-- Explicit **insufficient-evidence** refusal instead of guessing.
+- Explicit **insufficient-evidence** refusal instead of guessing: a
+  mechanical pre-generation gate refuses questions with no terminological
+  anchor in the corpus; the LLM's structured refusal flag is the second
+  layer; validation rejects uncited answers.
+- Citations are mechanically validated: the model references evidence IDs
+  only; document/version/section/page metadata and quotes come from stored
+  chunks, never from model output.
 - AI-generated findings are *potential* issues; humans accept/reject.
 - Append-only audit trail for every consequential action.
 - Fully local storage; LLM access is via a single provider abstraction
-  (OpenRouter primary, local Ollama fallback).
+  (OpenRouter primary, local Ollama fallback, deterministic mock offline).
 
 ## License / data notice
 
