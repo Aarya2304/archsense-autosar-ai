@@ -1,7 +1,7 @@
 # PROJECT_DECISIONS
 
 **Project:** ArchSense — AUTOSAR HLD Document Analysis Assistant (Tata Pulse Case Study 1 pilot)
-**Created:** 2026-09-16 · **Status:** M0 + M1 + M2 + M3 complete (M3 pending user review)
+**Created:** 2026-09-16 · **Status:** M0–M4 complete (M4 pending user review)
 **Rule:** Every major technical decision is recorded here with reason,
 alternatives considered, and consequences. Superseded decisions are struck
 through, not deleted.
@@ -333,17 +333,101 @@ python -m venv .venv
   refusal path handles them (mechanics verified by tests). Not claimed:
   hallucination-proofness, 100% refusal coverage.
 
-## Open items / pending decisions
+## D-021 — Extraction taxonomy derived from the corpus (M4.3/M4.28)
+- **Decision:** Entity types = component, interface, port, signal,
+  dependency, functional_flow. Predicates = provides (component→interface),
+  requires (component→interface), depends_on (component→component, ALL
+  component–component edges — the corpus's original requires/depends_on
+  label is preserved as an attribute on the dependency entity), carries
+  (interface→signal), implements (port→interface), participates_in
+  (component→functional_flow). Types with no corpus support (requirement,
+  data element as a distinct type, section, version) were NOT added.
+- **Reason:** both questions in the brief — "does the corpus support an
+  Entity/Fact distinction?" — answer YES richly: the HLD has 20/25/57/34/
+  24/5 entities (v1) and explicit relationship tables; inventing extra
+  types without content support would produce empty ontology classes.
+- **Alternatives:** generic (subject, predicate, object) triples with free-
+  form predicates (no mechanical domain/range checks possible);
+  mirroring AUTOSAR's full metamodel (vastly over-scoped for 11 days).
+- **Consequences:** predicates carry machine-checkable domain/range tables
+  (`ExtractedFact.PREDICATE_DOMAIN/_RANGE`); the validator rejects
+  type-violating facts instead of persisting them.
 
-- **M4 structured extraction:** deterministic + LLM hybrid over the same
-  chunk corpus; the LLM side reuses `LLMProvider` (D-017) and the
-  mechanical-validation pattern from D-018.
-- **M6 checks as quality goals:** start with the high-confidence core
-  (undefined refs, dangling requires, duplicates, conflicting providers,
-  orphans, unconsumed signals); add LLM-assisted checks only if meaningful.
-- **Real-provider smoke test:** OpenRouter key not yet available; run
-  `scripts/ask_copilot.py "..." --provider openrouter` once configured.
-  Default model remains `google/gemma-3-27b-it:free` (config-only change).
+## D-022 — Extraction provenance: evidence IDs, never LLM metadata (M4.6)
+- **Decision:** The extraction LLM sees evidence blocks `[EVIDENCE E1..En]`
+  (same philosophy as M3) and may only reference evidence IDs; the app
+  resolves IDs against the trusted ID→Source map built from chunk
+  metadata. Unknown IDs → issue + candidate rejected (never silently
+  accepted). The deterministic path embeds full `Source` objects directly.
+- **Reason:** identical trust model to M3 citations (D-018); one mental
+  model across the project, one validator philosophy.
+- **Alternatives:** letting the LLM echo page/section (hallucination
+  surface for zero benefit).
+- **Consequences:** every persisted fact carries document/version/sha256/
+  section/page-range/chunk_id from the chunk that yielded it; the
+  traceability chain fact→chunk→document→version→section→page is queryable
+  (`scripts/query_entities.py --fact ...`).
+
+## D-023 — Deterministic-first extraction + provider-map owner attribution (M4.4)
+- **Decision:** Five table handlers (3.1 catalogue → components with
+  type/layer/description; 3.2.x port tables → ports + implements +
+  provides/requires; 5 dictionary → signals + carries; 6.1 → dependency
+  entities + depends_on; 4.x signal tables → name-only signals) plus prose
+  patterns (component/interface/flow titles, Provider:/Consumers: lines,
+  negation-guarded name-pair dependencies). Port-table owner attribution
+  does NOT trust document order: the owner is the component that PROVIDES
+  the table's P-port interface per the section-4 provider map; fallback
+  for provides-less tables (CanDriver) = consumer-set intersection.
+- **Reason:** the deterministic pass alone scores P=R=F1=1.000 on BOTH
+  versions — the LLM is genuinely optional. Owner attribution had to be
+  content-based because tables physically flow across component section
+  boundaries on shared pages (the D-012 page-lumping lesson again: C-01's
+  port table sits after C-06's title in reading order).
+- **Alternatives:** LLM-first extraction (slow, non-deterministic, worse:
+  ~0.75 confidence defaults); section-label-based attribution (broken by
+  page lumping); nearest-preceding-title attribution (wrong owner for 5
+  tables on this corpus).
+- **Consequences:** name-pair prose facts carry the negation guard, so v2's
+  planted D6 sentence ("does not require") never creates a fact; the v2
+  planted D3 provider conflict is faithfully reflected (extraction reports
+  what the document says — conflict *detection* is M6's job).
+
+## D-024 — Extraction confidence: documented rules, not fake calibration
+- **Decision:** Rule-based assignment: 0.95 explicit ID in a table row;
+  0.90 explicit prose relationship ("Provider: C-xx") or relationship
+  derived from table columns; 0.85 name-pair prose dependency
+  (alias-resolved); 0.80 entity by name only (ID unknown at this stage).
+  LLM candidates default to 0.75. `EXTRACTION_MIN_CONFIDENCE` (default
+  0.5) is a rejection floor, not a probability.
+- **Reason:** the brief explicitly forbids pretending an LLM number is
+  mathematically meaningful; deterministic table matches are verifiably
+  exact on this corpus, so they earn the top tier. No empirical
+  calibration was performed and none is claimed.
+- **Alternatives:** learned confidence (no training signal); uniform
+  confidence (discards the real difference between an ID row and a name
+  mention).
+- **Consequences:** downstream consumers (M6 analysis, M7 diff) can filter
+  by tier; confidence is stored on every entity/fact row and surfaced in
+  the query CLI.
+
+## D-025 — Registry persistence reuses the M1 typed schema (M4.10)
+- **Decision:** Extraction output persists into the EXISTING M1 registry
+  tables (components, interfaces, ports, signals, dependencies,
+  functional_flows — all with (version_id, entity_id) uniqueness) plus ONE
+  new uniform table `extraction_facts` (version_id, fact_key unique,
+  subject/predicate/object, trusted provenance columns, indexes on
+  subject/object/predicate). Every run writes an AnalysisRun(kind=
+  "extraction") row and appends audit events (extraction_run_started /
+  extraction_run_finished / extraction_registry_cleared).
+- **Reason:** M1's schema anticipated exactly this subsystem; duplicating
+  it as a parallel entity/fact store would fork the registry and violate
+  the reuse instruction. The uniform facts table covers predicates with no
+  typed home (participates_in, implements) without per-predicate tables.
+- **Alternatives:** a generic EAV store (no FK-grade typing); Neo4j
+  (explicitly out of scope, D-006).
+- **Consequences:** re-running extraction upserts (idempotent, tested);
+  `--reset` clears one version's extraction output (audited); the graph
+  builder in M5 can join typed tables and extraction_facts directly.
 
 ## D-020 — M3 retrieval evaluation methodology (M3.3)
 - **Decision:** `scripts/compare_retrieval_modes.py` scores lexical,
@@ -359,3 +443,18 @@ python -m venv .venv
   dense-only on every metric (page_hit@5 0.867 vs 0.800; section_hit@5
   0.833 vs 0.700; MRR@5 0.709 vs 0.658) and beats lexical at K=5 while
   losing section_hit@1 to lexical (0.467 vs 0.500) — reported, not hidden.
+
+---
+
+## Open items / pending decisions
+
+- **M5 architecture graph:** the extraction registry (typed tables +
+  `extraction_facts`) gives M5 its nodes/edges directly — NetworkX build +
+  pyvis render, citations attached to every relationship (D-025 joins).
+- **M6 checks as quality goals:** start with the high-confidence core
+  (undefined refs, dangling requires, duplicates, conflicting providers,
+  orphans, unconsumed signals); the registry makes these SQL/graph queries.
+- **Real-provider smoke tests (copilot + extraction):** OpenRouter key not
+  yet available; both `scripts/ask_copilot.py --provider openrouter` and
+  `scripts/extract_entities.py --provider openrouter --llm` are ready to
+  run once configured. Default model remains `google/gemma-3-27b-it:free`.

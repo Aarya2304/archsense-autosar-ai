@@ -1,7 +1,7 @@
 # IMPLEMENTATION_STATUS
 
-**Updated:** 2026-09-16 (M0 + M1 + M2 + M3 complete)
-**Deadline:** 2026-09-26 · **Gate:** M4 starts after user review of this M3 report.
+**Updated:** 2026-09-17 (M0 + M1 + M2 + M3 + M4 complete)
+**Deadline:** 2026-09-26 · **Gate:** M5 starts after user review of this M4 report.
 
 ---
 
@@ -95,18 +95,17 @@
 
 ## Currently implementing
 
-- *(nothing — M3 complete, stopped at the milestone gate)*
+- *(nothing — M4 complete, stopped at the milestone gate)*
 
 ## Next up (requires approval)
-- M4: structured architecture extraction (components/interfaces/ports/
-  signals/dependencies) — deterministic parsing + LLM structured output
-  with the same mechanical-validation pattern (Pydantic models, entity
-  registry, confidence + provenance on every entity)
+- M5: architecture graph explorer — NetworkX nodes/edges built directly
+  from the M4 registry (typed tables + `extraction_facts`), pyvis
+  rendering, citation-provenance attached to every relationship.
 
 ## Test status
 
 ```
-198 passed, 1 deselected (~15s)       # default: fast + deterministic suite
+252 passed, 1 deselected (~19s)       # default: fast + deterministic suite
 1 passed (opt-in, real MiniLM)        # pytest -m model (HF download)
 
 tests/test_dataset_integrity.py   21 passed
@@ -120,7 +119,68 @@ tests/test_rag_hybrid.py          22 passed   (M3)
 tests/test_rag_llm.py             23 passed   (M3)
 tests/test_rag_context_citations.py 26 passed (M3, incl. 2 hardening regressions)
 tests/test_rag_copilot.py         23 passed   (M3, incl. 1 hardening regression)
+tests/test_extraction_schema_deterministic.py 24 passed (M4)
+tests/test_extraction_llm.py      17 passed   (M4)
+tests/test_extraction_service_storage.py 20 passed (M4)
 ```
+
+## M4 — Structured extraction (this milestone)
+- [x] **Taxonomy from the corpus (M4.3, D-021)** — 6 entity types
+      (component/interface/port/signal/dependency/functional_flow), 6
+      predicates with mechanical domain/range tables (provides, requires,
+      depends_on, carries, implements, participates_in); unsupported types
+      (requirement, data element) deliberately NOT added
+- [x] **Pydantic schema (M4.2)** `backend/extraction/models.py`:
+      `Source` (frozen trusted provenance), `EvidenceRef` (evidence ID or
+      resolved source), `ExtractedEntity` / `ExtractedFact` with
+      confidence bounds [0,1], normalization (`normalize_key`),
+      deterministic dedupe keys
+- [x] **Deterministic extractor (M4.4, D-023)**
+      `backend/extraction/deterministic.py`: 5 table handlers + prose
+      patterns; owner attribution via the section-4 provider map (page-
+      flowed tables are NOT owned by the nearest preceding title);
+      negation guard keeps v2's planted D6 sentence out of the facts
+- [x] **LLM extraction (M4.5–M4.6, M4.13–M4.14)**
+      `backend/extraction/context.py` + `llm.py`: evidence-ID contract
+      identical to M3; structured JSON {entities, facts}; unknown evidence
+      IDs rejected; MockExtractionProvider (deterministic, failure/
+      malformed/unknown-ID injection); OpenRouter/Ollama via the M3
+      factory unchanged
+- [x] **Mechanical validator (M4.7)** `backend/extraction/validator.py`:
+      evidence resolution (unknown/missing → reject), reference existence,
+      domain/range violation checks, confidence floor, deterministic
+      dedupe (best confidence wins); alias canonicalization merges
+      name-form and ID-form keys
+- [x] **Confidence model (M4.8, D-024)**: documented rule tiers
+      (0.95 table-with-ID / 0.90 explicit prose or derived table /
+      0.85 name-pair prose / 0.80 name-only / 0.75 LLM default);
+      `EXTRACTION_MIN_CONFIDENCE` rejection floor (default 0.5);
+      no fake empirical calibration claimed
+- [x] **Normalization + dedupe (M4.9)**: case-insensitive ID keys
+      (c-02 → component:C-02), name→ID alias map, dedupe on
+      `subject|predicate|object|object_value`
+- [x] **SQLite registry (M4.10–M4.11, D-025)**: populates the EXISTING M1
+      typed tables + new `extraction_facts` table (unique per version on
+      fact_key, indexed on subject/object/predicate); AnalysisRun rows +
+      append-only audit events; idempotent re-runs; audited `--reset`
+- [x] **ExtractionService (M4.12)** `backend/extraction/service.py`:
+      deterministic → optional LLM → validate → persist orchestration with
+      stage timings; provider/parse failures SURFACE as issues (test-
+      verified, not swallowed); structured summary
+- [x] **CLIs (M4.15/M4.16)**: `scripts/extract_entities.py`
+      (--document/--version/--llm/--provider/--deterministic-only/--reset/
+      --no-persist/--json/--min-confidence) and `scripts/query_entities.py`
+      (--entities/--entity/--related/--predicate/--fact/--version/--json);
+      full provenance trail fact→chunk→document→version→section→page
+- [x] **Evaluation (M4.17–M4.18)** `backend/extraction/evaluation.py` +
+      `scripts/evaluate_extraction.py`: gold derived mechanically from GT
+      registries; entity/fact P/R/F1 micro+per-predicate, provenance
+      accuracy, dedupe counts, per-example detail; **entities and facts
+      P=R=F1=1.000 on BOTH versions, provenance accuracy 1.000**
+- [x] **Tests (M4.19)**: 54 new tests (schema+deterministic 24, LLM 17,
+      service/storage 20) incl. exact GT-equality on both versions,
+      idempotent persistence, reset, audit trail, unknown-evidence
+      rejection; all 198 pre-M4 tests still pass
 
 ## M3 evaluation results (actual runs, this corpus, MiniLM)
 
@@ -155,27 +215,29 @@ Evidence gate calibration (one-shot grid, D-019,
 
 ## Known bugs
 
-- *(none open)* — M3 fixes during development: mock block-splitter absorbed
-  the `Question:` footer (every question trivially matched its own
-  evidence); gate `best_score` compared raw BM25 against a bounded
-  threshold; context/mock `[EVIDENCE E1]` contract mismatch; Windows
-  console encoding (em-dash → ASCII in rendered citations).
+- *(none open)* — M4 fixes during development: LLM parse/provider failures
+  were silently swallowed by the service (now surfaced as issues);
+  `session.get(model, None)` SAWarning in registry persistence; port-table
+  owner attribution initially trusted document order (5 tables on shared
+  pages got the wrong owner) — fixed via the section-4 provider map;
+  fact-key trailing-segment normalization in the query CLI.
 
 ## Blockers
 
-- *(none)* — OpenRouter key not present in the environment, so the live
-  provider smoke test (M3.16) has NOT been run; the provider
-  implementation is verified via mocked HTTP tests and the offline mock
-  path. Run `scripts/ask_copilot.py "<q>" --provider openrouter` once a
-  key is configured in `.env`.
+- *(none)* — OpenRouter key not present in the environment, so live
+  provider smoke tests (M3.16 copilot, M4.14 extraction) have NOT been
+  run; both paths are verified via mocked HTTP/offline tests. Run
+  `scripts/ask_copilot.py "<q>" --provider openrouter` or
+  `scripts/extract_entities.py --provider openrouter --llm` once a key is
+  configured in `.env`.
 
 ## Remaining work (milestone view)
 
 | Milestone | Scope | Planned | Status |
 |---|---|---|---|
 | M3 | Hybrid RAG + citation validator + refusal | Sep 19 | ✅ complete |
-| M4 | Hybrid structured extraction + registry | Sep 20 | next |
-| M5 | Graph explorer + HLD_v2 finalization | Sep 21 | — |
+| M4 | Structured extraction + registry + evaluation | Sep 20 | ✅ complete |
+| M5 | Graph explorer from the extraction registry | Sep 21 | next |
 | M6 | Deterministic checks + findings review UI | Sep 22 | — |
 | M7 | Revision compare + impact | Sep 23 | — |
 | M8 | Polish, export, evaluation harness, acceptance test | Sep 24 | — |
@@ -190,6 +252,10 @@ Evidence gate calibration (one-shot grid, D-019,
 - Citation provenance is mechanically enforced: the model can only
   reference evidence IDs; document/version/section/page/quote all come
   from stored chunk metadata — fabricated IDs are rejected by tests.
+- M4 adds the queryable-registry demo: `query_entities.py --fact ...`
+  prints the full traceability chain for any fact (chunk → document →
+  version → section → page), and extraction scores P=R=F1=1.000 against
+  the ground truth on both HLD versions — quantitative, not anecdotal.
 - Everything regenerates from scratch in <60 s via the three dataset
-  commands; vector indexing adds ~40 s (MiniLM on CPU); hybrid retrieval
-  adds ~2 ms over dense-only.
+  commands; extraction runs in ~17 ms per version (deterministic, no LLM);
+  registry persistence ~0.3 s per version.

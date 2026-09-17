@@ -367,6 +367,45 @@ class AnalysisRun(Base):
     __table_args__ = (Index("ix_runs_version", "version_id"),)
 
 
+class ExtractionFact(Base):
+    """Uniform fact/relationship store (M4): subject -> predicate -> object.
+
+    Keys are canonical normalized keys ("component:C-01"); provenance
+    columns are trusted chunk metadata (D-022); ``fact_key`` is the
+    deterministic dedupe identity so re-running extraction upserts instead
+    of duplicating (M4.7).
+    """
+
+    __tablename__ = "extraction_facts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    version_id: Mapped[int] = mapped_column(ForeignKey("document_versions.id"))
+    fact_key: Mapped[str] = mapped_column(String(400))
+    subject: Mapped[str] = mapped_column(String(200))
+    predicate: Mapped[str] = mapped_column(String(40))
+    object: Mapped[str] = mapped_column(String(200), default="")
+    object_value: Mapped[str] = mapped_column(String(200), default="")
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    extractor: Mapped[str] = mapped_column(String(20), default="deterministic")
+    document_name: Mapped[str] = mapped_column(String(255), default="")
+    version_label: Mapped[str] = mapped_column(String(50), default="")
+    sha256: Mapped[str] = mapped_column(String(64), default="")
+    section_no: Mapped[str] = mapped_column(String(64), default="")
+    section_title: Mapped[str] = mapped_column(String(255), default="")
+    page_start: Mapped[int] = mapped_column(Integer, default=0)
+    page_end: Mapped[int] = mapped_column(Integer, default=0)
+    source_chunk_id: Mapped[str] = mapped_column(String(64), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("version_id", "fact_key",
+                         name="uq_fact_per_version"),
+        Index("ix_facts_version_subject", "version_id", "subject"),
+        Index("ix_facts_version_object", "version_id", "object"),
+        Index("ix_facts_predicate", "version_id", "predicate"),
+    )
+
+
 class CompareRun(Base):
     __tablename__ = "compare_runs"
 

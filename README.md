@@ -32,7 +32,8 @@ findings, and revision impact out. Human review stays in the loop.
 | M1 | Page-aware PDF ingestion | ✅ complete |
 | M2 | Chunking, embedding benchmark, ChromaDB, retrieval + eval | ✅ complete |
 | M3 | Hybrid retrieval + cited RAG copilot + refusal gate | ✅ complete |
-| M4–M8 | Extraction → graph → analysis → diff → polish | planned |
+| M4 | Structured extraction + SQLite registry + evaluation | ✅ complete |
+| M5–M8 | Graph → analysis → diff → polish | planned |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
 `docs/PROJECT_DECISIONS.md` for every major design decision.
@@ -46,7 +47,7 @@ python -m venv .venv
 .venv/Scripts/python scripts/process_sample_docs.py       # ingest them (M1)
 .venv/Scripts/python scripts/build_vector_index.py        # chunks -> embeddings -> ChromaDB (M2)
 .venv/Scripts/python scripts/evaluate_retrieval.py        # page_hit@K / MRR vs ground truth
-.venv/Scripts/python -m pytest tests/                     # 195 tests
+.venv/Scripts/python -m pytest tests/                     # 252 tests
 ```
 
 ### Ask the copilot (M3, offline by default)
@@ -122,6 +123,68 @@ bge-m3 0.867 @ 3 t/s · lexical hashing baseline 0.900 @ 3758 t/s.
 Full methodology: `docs/PROJECT_DECISIONS.md` D-014/D-016/D-019/D-020;
 artifacts in `data/evaluation/` (git-ignored).
 
+### Structured extraction (M4, offline by default)
+
+```bash
+.venv/Scripts/python scripts/extract_entities.py                     # both versions, deterministic
+.venv/Scripts/python scripts/extract_entities.py --llm               # + mock LLM pass
+.venv/Scripts/python scripts/extract_entities.py --reset             # clear registry first
+.venv/Scripts/python scripts/extract_entities.py --json              # machine-readable
+.venv/Scripts/python scripts/extract_entities.py --provider openrouter --llm   # real LLM (key needed)
+.venv/Scripts/python scripts/query_entities.py --entities                        # registry counts
+.venv/Scripts/python scripts/query_entities.py --entity C-02                     # one entity
+.venv/Scripts/python scripts/query_entities.py --related C-10                    # facts touching C-10
+.venv/Scripts/python scripts/query_entities.py --fact "component:C-10|provides|interface:IF-13"   # provenance trail
+.venv/Scripts/python scripts/evaluate_extraction.py              # P/R/F1 vs ground truth
+```
+
+The extraction pipeline: **deterministic pass** (table handlers for the
+component catalogue / port tables / signal dictionary / dependency overview,
+plus prose title & provider/consumer patterns — no LLM) → **optional LLM
+pass** (same evidence-ID contract as M3; unknown IDs rejected) →
+**mechanical validation** (evidence resolution, reference/domain/range
+checks, confidence floor) → **normalization + dedupe** (name→ID alias map,
+`subject|predicate|object` dedupe keys) → **SQLite registry** (existing M1
+typed entity tables + `extraction_facts` + audit events).
+
+**Measured on this corpus** (`scripts/evaluate_extraction.py`): entities
+**P=1.000 R=1.000 F1=1.000** and facts **P=1.000 R=1.000 F1=1.000** on
+BOTH HLD versions (165 and 149 gold entities; 200 and 178 gold facts),
+provenance accuracy **1.000**, zero validation issues, ~17 ms per version
+deterministic end-to-end. Report: `data/evaluation/extraction_evaluation.json`.
+
+## M4 extraction architecture
+
+```
+chunks (M2, provenance-carrying)
+    │
+    ├─► deterministic.py ── table handlers + prose patterns (D-023)
+    │      3.1 catalogue -> components · 3.2.x port tables -> ports +
+    │      provides/requires · 4.x titles -> interfaces + provider/consumer
+    │      facts · 5 dictionary -> signals + carries · 6.1/6.2 ->
+    │      dependencies + depends_on · 7.x -> flows + participates_in
+    │      (owner attribution via the section-4 provider map — page-flowed
+    │       tables are NOT owned by the nearest preceding title, D-012 lesson)
+    │
+    ├─► context.py ── evidence blocks [EVIDENCE E1..En] + trusted map (M4.6)
+    │      └─ llm.py ── structured JSON {entities, facts} via M3 providers
+    │            (mock default; openrouter/ollama via config; unknown
+    │             evidence IDs rejected — never trusted provenance)
+    │
+    ▼
+validator.py ── mechanical validation (M4.7, D-022)
+    │   evidence resolution · reference existence · domain/range checks ·
+    │   confidence floor · deterministic dedupe (best confidence wins)
+    ▼
+registry.py ── SQLite (M4.10/M4.11)
+    │   M1 typed tables (components/interfaces/ports/signals/
+    │   dependencies/functional_flows) + extraction_facts (uniform,
+    │   dedupe-keyed) + AnalysisRun + append-only audit events
+    ▼
+query_entities.py ── queryable structured knowledge with full traceability:
+    fact -> chunk -> document -> version -> section -> page
+```
+
 ## Repository layout
 
 ```
@@ -132,7 +195,8 @@ backend/
                  indexing, evaluation
                  M3: lexical (BM25), hybrid (RRF), gate, context, citations,
                  copilot, llm/ (mock | openrouter | ollama)
-  extraction/    M4: deterministic + LLM structured extraction
+  extraction/    M4: schema, deterministic extractor, LLM extraction,
+                 validator, registry persistence, service, evaluation
   graph/         M5: NetworkX builder + pyvis rendering
   analysis/      M6: deterministic + LLM checks
   diff/          M7: revision comparator + impact
@@ -140,8 +204,8 @@ backend/
   services/      application layer (UI-agnostic business logic)
 app/             Streamlit UI (M8)
 scripts/         dataset generation, ingestion, indexing, evaluation,
-                 copilot CLI, gate calibration
-tests/           pytest suite (195 tests green at M3; opt-in model tests)
+                 copilot CLI, gate calibration, extraction + registry CLIs
+tests/           pytest suite (252 tests green at M4; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
 data/            generated artifacts (gitignored: processed/, vectors/,
                  evaluation/, db/)

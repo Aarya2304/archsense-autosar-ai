@@ -123,6 +123,15 @@ LLM_MAX_TOKENS: int = int(_env_str("LLM_MAX_TOKENS", "700"))
 # real generation.
 LLM_PROVIDER: str = _env_str("LLM_PROVIDER", "mock")
 
+# --------------------------------------------------------- M4 knobs ----
+# Extraction: deterministic pass always runs; the LLM pass is opt-in
+# (mock provider by default, so zero credentials are needed).
+EXTRACTION_USE_LLM: bool = _env_bool("EXTRACTION_USE_LLM", False)
+EXTRACTION_MIN_CONFIDENCE: float = float(
+    _env_str("EXTRACTION_MIN_CONFIDENCE", "0.5"))
+EXTRACTION_MAX_CHUNKS: int = int(_env_str("EXTRACTION_MAX_CHUNKS", "400"))
+EXTRACTION_LLM_PROVIDER: str = _env_str("EXTRACTION_LLM_PROVIDER", "mock")
+
 # --------------------------------------------------------- governance ------
 AUDIT_LOG_ENABLED: bool = _env_bool("AUDIT_LOG_ENABLED", True)
 HUMAN_REVIEW_REQUIRED: bool = _env_bool("HUMAN_REVIEW_REQUIRED", True)
