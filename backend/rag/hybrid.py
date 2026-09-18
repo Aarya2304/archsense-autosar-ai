@@ -135,6 +135,22 @@ def _post_filter(hits: list[RetrievedChunk],
             if wanted & set(range(h.page_start, h.page_end + 1))]
 
 
+def _equality_filter(hits: list[RetrievedChunk],
+                     where: dict[str, Any]) -> list[RetrievedChunk]:
+    """Client-side equality filter mirroring the store-level ``where`` keys.
+
+    Needed for the lexical mirror leg: BM25 retrieval has no metadata store
+    filter, so equality keys (``version``, ``document_name``, ...) applied
+    only to the dense leg would leak other documents'/versions' chunks into
+    the fused results (M8 compatibility fix: same semantics, both legs).
+    """
+    if not where:
+        return hits
+    return [h for h in hits
+            if all(getattr(h, key, None) == value
+                   for key, value in where.items())]
+
+
 # ---------------------------------------------------------------- service --
 
 @dataclass
@@ -195,8 +211,11 @@ class HybridRetrievalService:
             return result
 
         self.ensure_index()
-        lex_pool = _post_filter(
-            self._lexical.retrieve(query, top_k=max(self.lexical_k, k)), post)
+        lex_pool = _equality_filter(
+            _post_filter(
+                self._lexical.retrieve(query, top_k=max(self.lexical_k, k)),
+                post),
+            where)
 
         if mode == "lexical":
             trimmed = lex_pool[:k]

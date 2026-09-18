@@ -1,7 +1,7 @@
 # IMPLEMENTATION_STATUS
 
-**Updated:** 2026-09-18 (M0 + M1 + M2 + M3 + M4 + M5 + M6 + M7 complete)
-**Deadline:** 2026-09-26 · **Gate:** M8 starts after user review of this M7 report.
+**Updated:** 2026-09-18 (M0–M8 complete: all milestones implemented, tested and verified)
+**Deadline:** 2026-09-26 · M8 delivered; remaining time is for review, demo dry-runs and submission.
 
 ---
 
@@ -95,14 +95,11 @@
 
 ## Currently implementing
 
-- *(nothing — M6 complete, stopped at the milestone gate)*
+- *(nothing — M8 complete; all eight milestones delivered)*
 
 ## Next up (requires approval)
-- M8: final Streamlit application — copilot chat (M3), retrieval/extraction
-  inspection, findings review workflow (M6 statuses are already
-  persistence-backed), graph explorer embed (M5 HTML), revision compare
-  view (M7 `RevisionComparison.to_dict()`), acceptance-test harness.
-  All backend subsystems above expose UI-agnostic facades ready for it.
+- *(none — project milestones complete; remaining work is review, demo
+  dry-runs, traceability matrix and submission per the schedule below)*
 
 ## M7 — Revision Compare / Impact Analysis (complete)
 
@@ -393,6 +390,42 @@ Evidence gate calibration (one-shot grid, D-019,
   `scripts/extract_entities.py --provider openrouter --llm` once a key is
   configured in `.env`.
 
+## M8 — Final Streamlit application (COMPLETE)
+
+**Delivered:** `app/` package — `main.py` (router), `state.py` (session
+state, D-043), `navigation.py`, `components/helpers.py`, `services/`
+(`app_services.py` adapters over M1–M7, `report_service.py` deterministic
+report assembly) and seven screens under `screens/`: Dashboard, Document
+Workspace, Architecture Explorer, Copilot, Findings, Revision Compare,
+Export & Report. The app reuses every backend facade — no algorithm is
+duplicated in the UI (D-041); caching per D-042; exports per D-045.
+
+**Startup:** `.venv/Scripts/python.exe -m streamlit run app/main.py`
+(headless mode supported; default port 8501).
+
+**Verification:** Streamlit `AppTest` battery `scripts/verify_app_screens.py`
+— **61 checks, 61 passed**: all seven screens render without exception,
+navigation + dashboard cards work, workspace page/section/version behavior,
+explorer filters (165/200 full → 20/24 with `component` filter; confidence
+1.0 drops all edges), copilot grounded answer + citations with version
+isolation, findings v1.0.0 clean / v1.1.0 `orphan_entity` with trusted M4
+provenance, revision compare 0/16/1 + 43/65 with D1 `depends_on` removal in
+the change table (974 → 233 impacts at depth 0), export JSON/CSV with all
+sections and no secrets, and stale-state clearing on version switch.
+
+**Compatibility fix:** M3 hybrid retrieval leaked cross-version evidence in
+the lexical leg (D-046, fixed minimally in `backend/rag/hybrid.py`); all
+M0–M7 tests pass unchanged.
+
+**Tests:** **435 passed, 1 deselected** (was 403; +32 M8 tests).
+Screen battery: `python scripts/verify_app_screens.py` (exit 0).
+
+**Limitations:** findings review stays read-only in this UI (safe per-finding
+review mutation is not exposed by M6 yet); findings screen shows persisted
+state read-only or a fresh uncached run, never silently; external AUTOSAR
+PDF still has no M4 extraction, so the UI shows its ingestion/RAG status
+only — no fabricated entities/findings/graph for it.
+
 ## Remaining work (milestone view)
 
 | Milestone | Scope | Planned | Status |
@@ -400,9 +433,9 @@ Evidence gate calibration (one-shot grid, D-019,
 | M3 | Hybrid RAG + citation validator + refusal | Sep 19 | ✅ complete |
 | M4 | Structured extraction + registry + evaluation | Sep 20 | ✅ complete |
 | M5 | Graph explorer from the extraction registry | Sep 21 | ✅ complete |
-| M6 | Deterministic checks + findings review UI | Sep 22 | done (backend + CLI; review UI lands in M8) |
+| M6 | Deterministic checks + findings review UI | Sep 22 | done (backend + CLI; read-only review UI in M8) |
 | M7 | Revision compare + impact analysis | Sep 24 | done (backend + CLI + evaluation) |
-| M8 | Polish, export, evaluation harness, acceptance test | Sep 24 | next |
+| M8 | Streamlit application: 7 screens, exports, verification | Sep 24 | done (UI + services + 61-check screen battery) |
 | — | Docs, traceability matrix, Drive submission | Sep 25 | — |
 | — | Demo dry-runs, backup | Sep 26 | — |
 

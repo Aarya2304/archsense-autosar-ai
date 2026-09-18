@@ -36,7 +36,7 @@ findings, and revision impact out. Human review stays in the loop.
 | M5 | Architecture Graph Explorer (NetworkX + pyvis) | ✅ complete |
 | M6 | Deterministic architecture findings + analysis CLI | ✅ complete |
 | M7 | Revision compare + impact analysis (deterministic diff) | ✅ complete |
-| M8 | Final Streamlit application | planned |
+| M8 | Final Streamlit application | ✅ complete |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
 `docs/PROJECT_DECISIONS.md` for every major design decision.
@@ -55,7 +55,9 @@ python -m venv .venv
 .venv/Scripts/python scripts/compare_revisions.py \
     --base-version 1.0.0 --target-version 1.1.0           # revision diff + impact (M7)
 .venv/Scripts/python scripts/evaluate_revisions.py        # diff P/R/F1 vs ground truth
-.venv/Scripts/python -m pytest tests/                     # 403 tests
+.venv/Scripts/python -m streamlit run app/main.py         # launch the app (M8)
+.venv/Scripts/python scripts/verify_app_screens.py        # 61-check screen battery
+.venv/Scripts/python -m pytest tests/                     # 435 tests
 ```
 
 ### Ask the copilot (M3, offline by default)
@@ -289,6 +291,43 @@ rule tiers, not safety ratings.
 prose-vs-structure or cross-version and are reported as not-applicable
 with reasons (D-035) — never silently skipped, never fabricated.
 
+## M8 Streamlit application (offline by default)
+
+```bash
+.venv/Scripts/python -m streamlit run app/main.py         # http://localhost:8501
+```
+
+Seven screens share one workspace state (selected version drives Document
+Workspace, Architecture Explorer, Copilot and Findings; D-043 clears stale
+selections on version change):
+
+- **Dashboard** — document/version stats (pages, chunks, entities/facts,
+  findings) and navigation cards.
+- **Document Workspace** — page preview (PyMuPDF SVG, page-level
+  provenance; no fabricated coordinates), section map, indexed chunk text.
+- **Architecture Explorer** — M5 graph via PyVis (offline, embedded
+  resources), entity-type/predicate/confidence filters, entity search,
+  entity details with per-relationship provenance, relationship-table
+  fallback.
+- **Copilot** — M3 grounded Q&A with citations; version-scoped retrieval
+  (hybrid lexical+dense, D-046 fix keeps the lexical leg version-pure);
+  provider picker (mock default; OpenRouter/Ollama give actionable error
+  messages, no key ever displayed).
+- **Findings** — v1.0.0 is a clean baseline; v1.1.0 shows the deterministic
+  `orphan_entity` finding with trusted M4 provenance; fresh runs are
+  explicit, persisted findings are read-only (review mutation not exposed
+  yet).
+- **Revision Compare** — M7 diff + impact analysis (0 added / 16 removed /
+  1 changed entities, +43/-65 relationships for 1.0.0→1.1.0); impacts are
+  always labelled *potentially* impacted; depth is configurable.
+- **Export & Report** — deterministic JSON report + findings/changes/
+  impacts CSV downloads (sections 1–9, no secrets, D-045).
+
+UI-agnostic service adapters (`app/services/`) wrap M1–M7 facades; the UI
+never re-implements backend logic (D-041). Screen-level verification:
+`.venv/Scripts/python scripts/verify_app_screens.py` (61 checks via
+Streamlit AppTest).
+
 ## M7 revision compare (fully offline, no LLM)
 
 ```bash
@@ -350,13 +389,17 @@ backend/
                  CompareRun persistence, evaluation
   storage/       SQLite schema, sessions, audit log
   services/      application layer (UI-agnostic business logic)
-app/             Streamlit UI (M8)
+app/             Streamlit UI (M8): main router, state, components,
+                 services/ (thin adapters over M1-M7 + report assembly),
+                 screens/ (Dashboard, Document Workspace, Architecture
+                 Explorer, Copilot, Findings, Revision Compare, Export)
 scripts/         dataset generation, ingestion, indexing, evaluation,
                  copilot CLI, gate calibration, extraction + registry CLIs,
                  graph explorer + graph evaluation,
                  findings analysis + findings evaluation,
-                 revision compare + revision evaluation
-tests/           pytest suite (403 tests green at M7; opt-in model tests)
+                 revision compare + revision evaluation,
+                 app screen verification battery (verify_app_screens.py)
+tests/           pytest suite (435 tests green at M8; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
 data/            generated artifacts (gitignored: processed/, vectors/,
                  evaluation/, db/, graphs/, exports/)

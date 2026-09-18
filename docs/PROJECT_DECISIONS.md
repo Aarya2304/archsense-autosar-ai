@@ -691,6 +691,60 @@ never false negatives. Change is NOT defect: RELATIONSHIP_REMOVED is
 reported as a change; findings arise only from explicit rules
 (stale_reference today).
 
+## D-041 — M8 UI architecture: thin adapters over M0–M7 facades (M8)
+
+The Streamlit app (`app/`) is a consumer, never a second implementation:
+`screens/` render, `services/` adapt, `components/` format. Every screen
+delegates to the existing UI-agnostic facades (M5 `GraphService`, M6
+`FindingEngine`/persistence, M7 comparator, M3 copilot, M1 storage) — no
+backend algorithm is re-implemented in UI code, no new database, no FastAPI.
+`app/screens/` (not `app/pages/`) is deliberate: Streamlit auto-treats a
+`pages/` directory as a multipage app, which would bypass the app's own
+state-aware router.
+
+## D-042 — M8 caching policy (M8)
+
+Immutable resources are cached per session with `st.cache_resource`
+(engine/session factory, embedder, Chroma collection, graphs). Mutable
+analysis results (fresh M6 runs, M7 comparisons, copilot answers, reports)
+are never cached by decorator — they live in session state, are produced by
+explicit user actions, and are invalidated on version change (D-043).
+Sentence-transformer load cost is paid once per process/session, not per
+interaction.
+
+## D-043 — Version change invalidates stale selections (M8)
+
+Entity keys, findings, comparisons, answers and reports are version-scoped,
+so `set_version()` clears all of them unconditionally on change and resets
+the workspace to page 1. The UI must never display v1.0.0 data under a
+v1.1.0 selection. Shared version selectors are index-driven from
+`as_version` (no widget keys) so every screen observes the same value.
+
+## D-044 — UI renders only backend-generated HTML/SVG (M8)
+
+The only HTML-bearing surface is the PyVis graph (backend-generated,
+`cdn_resources="in_line"`, rendered via `st.iframe`) and the PyMuPDF page
+SVG (backend-generated string in `st.iframe`). No user-provided string is
+ever passed to an HTML-rendering element, so there is no HTML-injection
+path from the UI.
+
+## D-045 — Exports contain deterministic facts, never secrets (M8)
+
+Reports assemble sections 1–9 from M1–M7 data only; LLM output never fills
+factual fields. No API keys, environment variables or stack traces are
+included; downloads are offered via `st.download_button` and mirrored under
+git-ignored `data/exports/`.
+
+## D-046 — M3 hybrid version-filter fix (M8 compatibility fix)
+
+During M8 verification a real M3 bug surfaced: in hybrid mode the store-level
+`version` equality filter applied only to the dense leg; the lexical (BM25)
+leg retrieved across all versions, so a v1.1.0 copilot answer could cite
+v1.0.0 chunks. Fixed minimally in `backend/rag/hybrid.py` (equality keys
+must filter both legs). This is a correctness fix, not a redesign: the M3
+API, RRF fusion and gate are unchanged, and all M3 tests pass. Verified:
+v1.1.0 answers cite only v1.1.0 evidence.
+
 ## Open items / pending decisions
 
 - **M7 diff:** edge identity = `fact_key` (D-027) makes the v1→v2 edge
@@ -698,10 +752,12 @@ reported as a change; findings arise only from explicit rules
   remaining planted defects (D1 removed dependency, D2 stale reference,
   D6 contradiction, D7 prose/table mismatch, D8 impact-relevant change)
   are the natural M7 gold set — see D-035.
-- **Real-provider smoke tests (copilot + extraction):** OpenRouter key not
-  yet available; both `scripts/ask_copilot.py --provider openrouter` and
-  `scripts/extract_entities.py --provider openrouter --llm` are ready to
-  run once configured. Default model remains `google/gemma-3-27b-it:free`.
+- **Real-provider smoke tests (copilot + extraction):** OpenRouter
+  reachable (M8 verification performed one real round-trip; provider/model
+  resolved, LLM judged the demo question outside the gated evidence — no
+  fabricated answer). Extraction smoke test still pending; default copilot
+  model `google/gemma-3-27b-it:free` (M8 env used
+  `nvidia/nemotron-3-super-120b-a12b:free`).
 - **D2 stale-name witness:** detectable only from prose (the old C-09
   name inside `component:C-09.description`); a prose-level detector
   (RAG-text based, outside the structured registry) could close this —
