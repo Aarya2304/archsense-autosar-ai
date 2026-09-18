@@ -1,7 +1,7 @@
 # PROJECT_DECISIONS
 
 **Project:** ArchSense — AUTOSAR HLD Document Analysis Assistant (Tata Pulse Case Study 1 pilot)
-**Created:** 2026-09-16 · **Status:** M0–M5 complete (M5 pending user review)
+**Created:** 2026-09-16 · **Status:** M0–M6 complete (M6 pending user review)
 **Rule:** Every major technical decision is recorded here with reason,
 alternatives considered, and consequences. Superseded decisions are struck
 through, not deleted.
@@ -529,15 +529,95 @@ python -m venv .venv
   WITHOUT being findings; the validator's warning distinguishes the two
   classes explicitly.
 
+## D-031 — Findings are derived, deterministic, and ID-addressed (M6)
+
+**Context:** M6 detects architecture issues. A naive approach treats the
+LLM as the analyst; that breaks the project's trust model.
+
+**Decision:** all M6 findings are produced by six mechanical detectors over
+the trusted M4 registry + M5 graph (same derivation-only principle as
+D-026). The LLM plays NO role in deciding that a finding exists. Each
+finding carries a deterministic content-addressed ID
+`M6-<TYPECODE>-<sha256[:10]>(version|type|entity_keys|fact_keys)` — same
+inputs always yield the same ID, so re-runs are idempotent and M7 comparison
+is a set operation. No random UUIDs.
+
+**Consequences:** findings are reproducible; provenance is copied verbatim
+from registry columns (D-022/D-028 chain continues); the validator (V1-V10)
+recomputes and checks every ID.
+
+## D-032 — Detector rule definitions (M6)
+
+Exact rules (all deterministic, documented including their limitations):
+
+- **UNDEFINED_REFERENCE (high):** a fact's subject or object canonical key
+  has no entity row for the same version. Facts are reported, never
+  silently dropped.
+- **DANGLING_REQUIRES (high if the interface entity is itself undefined,
+  else medium):** `component -> requires -> interface` with NO
+  `component -> provides -> interface` fact in the same version.
+  Asymmetry is deliberate: provision without demand is NOT a finding
+  (D-027 graph keeps such interfaces connected).
+- **DUPLICATE_INTERFACE (medium):** two or more DISTINCT interface entities
+  whose normalized names collide. Repeated *references* are never
+  duplicates (M4 already enforces unique `(version_id, entity_id)`).
+- **CONFLICTING_PROVIDERS (high):** ≥ 2 distinct components hold `provides`
+  facts for the same interface. The M4/M5 model has NO deployment/
+  service-instance semantics, so every multi-provider case is flagged as a
+  potential conflict — documented MVP limitation, not a claim about AUTOSAR.
+- **ORPHAN_ENTITY (medium):** degree-0 component/interface/signal/
+  functional_flow nodes in the version graph. Dependency nodes are excluded
+  (degree-0 by design, D-030); ports are excluded (their linkage is fact-
+  level; a factless port is an extraction gap, not an architecture issue).
+- **UNCONSUMED_SIGNAL (medium):** a signal whose carrying interface has zero
+  `requires` facts. The M4 model has no signal-level consumption predicate,
+  so consumption is inferred transitively through the interface — the
+  strongest defensible rule; per-signal reads are invisible to the model.
+
+## D-033 — Severity and confidence (M6)
+
+**Severity** reuses the M1 `FindingSeverity` enum (high/medium/low/info) —
+the M6 task's "error/warning/info" sketch maps onto high/medium/info so no
+parallel vocabulary is created. Mapping per detector is fixed in D-032; no
+LLM and no numeric score is involved, and severity does NOT claim real-
+world automotive safety impact.
+
+**Confidence** is rule-based, not calibrated: a finding inherits the MAX
+confidence of its supporting registry rows (max = the strongest witness;
+simple, deterministic, monotone). Like M4 confidence it is a tier, not a
+probability.
+
+## D-034 — Findings persistence: reuse, idempotency, review preservation (M6)
+
+The existing M1 `AnalysisRun(kind="analysis")` + `Finding` tables are used
+as-is; no new tables. A run persists exactly what the CURRENT detectors
+produce for one version: same deterministic finding_id → update in place,
+carrying over `status`/`reviewer_comment`/`reviewed_at` (human review work
+is never lost); findings no longer produced are removed from the new run's
+record set. `--reset` deletes per version with audit events (M4 convention).
+Version isolation is enforced at the single context-load point: a run can
+only ever see one `DocumentVersion`'s rows.
+
+## D-035 — Gold-set applicability in findings evaluation (M6)
+
+The 8 planted v2 defects in the M0 ground truth are NOT all registry-level:
+D3 (conflicting provider) and D5 (dropped signal) manifest only as
+prose-vs-structure contradictions that M4's table-wins canonicalization
+already resolved, and D1/D2/D6/D7/D8 are cross-version or prose checks
+(M7 scope). Evaluation therefore derives applicability MECHANICALLY (a gold
+defect counts only if its structural witness holds against the registry:
+today only D4) and reports non-applicable gold with reasons instead of
+counting them as false negatives. Fabricating recall against prose-only
+defects would misrepresent capability; M7's cross-version diff is the
+correct instrument for the rest.
+
 ## Open items / pending decisions
 
-- **M6 checks as quality goals:** start with the high-confidence core
-  (undefined refs, dangling requires, duplicates, conflicting providers,
-  orphans, unconsumed signals); the registry makes these SQL/graph queries
-  and `backend/graph/validation.py` already provides dangling/orphan
-  primitives to build on.
 - **M7 diff:** edge identity = `fact_key` (D-027) makes the v1→v2 edge
-  diff a set operation; node diff uses canonical keys directly.
+  diff a set operation; node diff uses canonical keys directly. The
+  remaining planted defects (D1 removed dependency, D2 stale reference,
+  D6 contradiction, D7 prose/table mismatch, D8 impact-relevant change)
+  are the natural M7 gold set — see D-035.
 - **Real-provider smoke tests (copilot + extraction):** OpenRouter key not
   yet available; both `scripts/ask_copilot.py --provider openrouter` and
   `scripts/extract_entities.py --provider openrouter --llm` are ready to

@@ -34,7 +34,8 @@ findings, and revision impact out. Human review stays in the loop.
 | M3 | Hybrid retrieval + cited RAG copilot + refusal gate | ✅ complete |
 | M4 | Structured extraction + SQLite registry + evaluation | ✅ complete |
 | M5 | Architecture Graph Explorer (NetworkX + pyvis) | ✅ complete |
-| M6–M8 | Analysis → diff → polish | planned |
+| M6 | Deterministic architecture findings + analysis CLI | ✅ complete |
+| M7–M8 | Revision diff → final Streamlit app | planned |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
 `docs/PROJECT_DECISIONS.md` for every major design decision.
@@ -48,7 +49,9 @@ python -m venv .venv
 .venv/Scripts/python scripts/process_sample_docs.py       # ingest them (M1)
 .venv/Scripts/python scripts/build_vector_index.py        # chunks -> embeddings -> ChromaDB (M2)
 .venv/Scripts/python scripts/evaluate_retrieval.py        # page_hit@K / MRR vs ground truth
-.venv/Scripts/python -m pytest tests/                     # 300 tests
+.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0      # deterministic findings (M6)
+.venv/Scripts/python scripts/evaluate_findings.py                     # findings P/R/F1 vs planted defects
+.venv/Scripts/python -m pytest tests/                     # 348 tests
 ```
 
 ### Ask the copilot (M3, offline by default)
@@ -231,6 +234,58 @@ isolation clean, provenance correctness **1.000**, registry↔graph 1:1
 (0 missing, 0 extra, 0 duplicate fact keys), build ≈ 15–50 ms per version.
 Report: `data/evaluation/graph_evaluation.json`.
 
+### Architecture Findings (M6, fully offline, no LLM)
+
+```bash
+.venv/Scripts/python scripts/analyze_findings.py --version 1.0.0             # summary
+.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --persist   # store (idempotent)
+.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --json      # machine-readable
+.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --persist --reset
+.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --finding-type orphan_entity
+.venv/Scripts/python scripts/evaluate_findings.py                            # P/R/F1 vs planted defects
+.venv/Scripts/python scripts/evaluate_findings.py --json
+```
+
+Example (`--version 1.1.0`):
+
+```
+Version: 1.1.0
+Entities analyzed: 149
+Facts analyzed:    178
+Findings: 1
+
+By type:
+  UNDEFINED_REFERENCE: 0
+  DANGLING_REQUIRES: 0
+  DUPLICATE_INTERFACE: 0
+  CONFLICTING_PROVIDERS: 0
+  ORPHAN_ENTITY: 1
+  UNCONSUMED_SIGNAL: 0
+
+[medium] M6-ORPHAN-ed409bb95a
+  orphan_entity: Orphan entity component:C-05
+  Entity component:C-05 ('SeatAdjustSWC') has degree 0 in the v1.1.0 architecture graph ...
+  evidence: 1 item(s), source: ABC_HLD_v1.1.0.pdf 3.1 p4
+```
+
+Findings are **deterministically detected from structured architecture
+facts** — six rule families over the M4 registry + M5 graph (undefined
+references, dangling requires, duplicate interfaces, conflicting providers,
+orphan entities, unconsumed signals; exact rules in D-032). Every finding
+carries a deterministic ID (`M6-<TYPE>-<hash>`), trusted provenance copied
+verbatim from registry metadata, and rule-based confidence. Persistence
+reuses the M1 `AnalysisRun`/`Finding` tables: re-runs are idempotent and
+preserve human review status (D-034). What a finding is NOT: a semantic
+judgment — the LLM plays no role in detection, and severity/confidence are
+rule tiers, not safety ratings.
+
+**Measured** (`scripts/evaluate_findings.py`): v1.0.0 is a clean baseline
+(0 findings); v1.1.0 detects the planted D4 orphan (C-05) with
+**P = R = F1 = 1.000** on applicable gold. The other planted defects are
+prose-vs-structure or cross-version (M7 scope) and are reported as
+not-applicable with reasons (D-035) — never silently skipped, never
+fabricated.
+
 ## M5 graph architecture
 
 ```
@@ -261,15 +316,17 @@ backend/
                  validator, registry persistence, service, evaluation
   graph/         M5: MultiDiGraph builder, validation, analysis, filtering,
                  JSON/GraphML export, pyvis rendering, service, evaluation
-  analysis/      M6: deterministic + LLM checks
+  findings/      M6: finding model, six deterministic detectors, engine,
+                 validator (V1-V10), idempotent persistence, evaluation
   diff/          M7: revision comparator + impact
   storage/       SQLite schema, sessions, audit log
   services/      application layer (UI-agnostic business logic)
 app/             Streamlit UI (M8)
 scripts/         dataset generation, ingestion, indexing, evaluation,
                  copilot CLI, gate calibration, extraction + registry CLIs,
-                 graph explorer + graph evaluation
-tests/           pytest suite (300 tests green at M5; opt-in model tests)
+                 graph explorer + graph evaluation,
+                 findings analysis + findings evaluation
+tests/           pytest suite (348 tests green at M6; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
 data/            generated artifacts (gitignored: processed/, vectors/,
                  evaluation/, db/, graphs/, exports/)

@@ -1,7 +1,7 @@
 # IMPLEMENTATION_STATUS
 
-**Updated:** 2026-09-17 (M0 + M1 + M2 + M3 + M4 + M5 complete)
-**Deadline:** 2026-09-26 · **Gate:** M6 starts after user review of this M5 report.
+**Updated:** 2026-09-17 (M0 + M1 + M2 + M3 + M4 + M5 + M6 complete)
+**Deadline:** 2026-09-26 · **Gate:** M7 starts after user review of this M6 report.
 
 ---
 
@@ -95,19 +95,20 @@
 
 ## Currently implementing
 
-- *(nothing — M5 complete, stopped at the milestone gate)*
+- *(nothing — M6 complete, stopped at the milestone gate)*
 
 ## Next up (requires approval)
-- M6: deterministic consistency/completeness checks over the registry +
-  graph (undefined references, dangling requires, duplicates, conflicting
-  providers, orphans, unconsumed signals) with human-review workflow —
-  `backend/graph/validation.py` already provides the dangling/orphan
-  primitives and the Finding schema/tables exist since M1.
+- M7: v1→v2 revision compare — node diff over canonical keys, edge diff
+  over `fact_key` identity (D-027); added/removed/changed relationships
+  with per-change provenance and impact lists. The remaining planted
+  defects (D1 removed dependency, D2 stale reference, D6 contradiction,
+  D7 prose/table mismatch, D8 impact-relevant change) form the natural
+  M7 gold set (D-035).
 
 ## Test status
 
 ```
-300 passed, 1 deselected (~46s)       # default: fast + deterministic suite
+348 passed, 1 deselected (~35s)       # default: fast + deterministic suite
 1 passed (opt-in, real MiniLM)        # pytest -m model (HF download)
 
 tests/test_dataset_integrity.py   21 passed
@@ -126,6 +127,8 @@ tests/test_extraction_llm.py      17 passed   (M4)
 tests/test_extraction_service_storage.py 20 passed (M4)
 tests/test_graph_builder.py       41 passed   (M5)
 tests/test_graph_viz_eval.py      13 passed   (M5)
+tests/test_findings_models_detectors.py   34 passed   (M6)
+tests/test_findings_engine_persistence_eval.py   14 passed   (M6)
 ```
 
 ## M4 — Structured extraction (this milestone)
@@ -315,8 +318,8 @@ Evidence gate calibration (one-shot grid, D-019,
 | M3 | Hybrid RAG + citation validator + refusal | Sep 19 | ✅ complete |
 | M4 | Structured extraction + registry + evaluation | Sep 20 | ✅ complete |
 | M5 | Graph explorer from the extraction registry | Sep 21 | ✅ complete |
-| M6 | Deterministic checks + findings review UI | Sep 22 | next |
-| M7 | Revision compare + impact | Sep 23 | — |
+| M6 | Deterministic checks + findings review UI | Sep 22 | done (backend + CLI; review UI lands in M8) |
+| M7 | Revision compare + impact analysis | Sep 24 | next |
 | M8 | Polish, export, evaluation harness, acceptance test | Sep 24 | — |
 | — | Docs, traceability matrix, Drive submission | Sep 25 | — |
 | — | Demo dry-runs, backup | Sep 26 | — |
@@ -342,3 +345,92 @@ Evidence gate calibration (one-shot grid, D-019,
 - Everything regenerates from scratch in <60 s via the three dataset
   commands; extraction runs in ~17 ms per version (deterministic, no LLM);
   registry persistence ~0.3 s per version.
+
+---
+
+## M6 — Findings / Architecture Analysis (complete)
+
+**Scope delivered:** deterministic architecture analysis over the trusted
+M4 registry + M5 graph. Six detector families, mechanical validation
+(V1–V10), idempotent persistence into the EXISTING M1
+`AnalysisRun(kind="analysis")` + `Finding` tables (no new tables), version
+isolation enforced at the single context-load point, CLI + evaluation.
+No LLM, no network, no PDF parsing anywhere in the M6 path.
+
+### Architecture
+
+```
+SQLite M4 registry + M5 graph  (trusted, version-scoped)
+        |  build_analysis_context() — one-shot load, prebuilt maps
+        v
+FindingEngine (backend/findings/engine.py)
+        |  six detectors (detectors.py, D-032 rules)
+        v
+Finding (models.py, deterministic IDs M6-<TYPE>-<hash>, D-031)
+        |  validate_findings() V1–V10 (validator.py)
+        v
+persist_findings() — AnalysisRun(kind="analysis"), idempotent,
+        review-state preserving (persistence.py, D-034)
+        v
+scripts/analyze_findings.py · scripts/evaluate_findings.py
+```
+
+### Detector results on the synthetic corpus (measured)
+
+| version | entities | facts | findings |
+|---------|----------|-------|----------|
+| 1.0.0   | 165      | 200   | 0 (clean baseline) |
+| 1.1.0   | 149      | 178   | 1 (orphan `component:C-05` — planted D4) |
+
+Evaluation vs ground truth (`scripts/evaluate_findings.py`): v1
+TP=FP=FN=0; v2 applicable gold = 1 (D4), detected 1, **precision =
+recall = F1 = 1.000**. Six of the eight planted defects (D2, D3, D5,
+D6, D7, D8) are **not applicable to v2 registry-level M6**: they are
+prose-vs-structure or cross-version defects — D3/D5 were already resolved
+by M4's documented table-wins canonicalization, the rest are M7 scope
+(D-035). (The remaining planted defect, D1, is a v1 gold entry and is
+likewise reported not-applicable in v1's evaluation.) All not-applicable
+defects are reported with reasons, never counted as false negatives.
+
+### Performance (measured, per version)
+
+Context build ≈ 12–40 ms; all six detectors + validation ≈ 0.7 ms;
+total ≈ 13–41 ms. SQLite persist of a run ≈ 5 ms. No DB scans inside
+detector loops (prebuilt maps).
+
+### Files
+
+- Created: `backend/findings/{__init__,models,context,detectors,validator,engine,persistence,evaluation}.py`,
+  `scripts/analyze_findings.py`, `scripts/evaluate_findings.py`,
+  `tests/test_findings_models_detectors.py`,
+  `tests/test_findings_engine_persistence_eval.py`
+- Modified: `docs/PROJECT_DECISIONS.md` (D-031…D-035),
+  `docs/IMPLEMENTATION_STATUS.md`, `README.md`. No M0–M5 code touched.
+
+### Verification (all run)
+
+- Full suite: **348 passed, 1 deselected** (was 300; +48 M6 tests,
+  nothing removed or weakened)
+- `analyze_findings.py --version 1.0.0` → 0 findings (baseline)
+- `analyze_findings.py --version 1.1.0` → D4 orphan, provenance
+  `ABC_HLD_v1.1.0.pdf §3.1 p4`, confidence 0.95
+- `--persist` idempotency: second run `persisted=1 carried_review_state=1
+  removed=0`; `--reset` removed 2 rows then re-persisted cleanly
+- Version isolation: v1 run sees no v2 facts (tested structurally)
+- JSON mode emits the full machine-readable structure (validation,
+  counts, timings, findings with evidence + provenance)
+- External doc `data/external_test/AUTOSAR_EXP_PlatformDesign.pdf`: NOT
+  analyzable by M6 — it has no `DocumentVersion` row and no M4 structured
+  extraction; M6 honestly reports this rather than inventing a workaround.
+
+### Limitations
+
+- Only D4 of the eight planted defects is structurally witnessed in the
+  registry; D3/D5 applicability is blocked by M4's table-wins
+  canonicalization and the absence of signal-level consumption (D-035).
+- CONFLICTING_PROVIDERS flags every multi-provider interface; the model
+  cannot distinguish legitimate AUTOSAR deployment/service-instance
+  setups (documented in D-032, not hidden).
+- Confidence/severity are rule-based tiers, not calibrated probabilities
+  or safety impact ratings.
+- Review workflow statuses exist in storage; the UI to change them is M8.
