@@ -1,7 +1,7 @@
 # PROJECT_DECISIONS
 
 **Project:** ArchSense — AUTOSAR HLD Document Analysis Assistant (Tata Pulse Case Study 1 pilot)
-**Created:** 2026-09-16 · **Status:** M0–M6 complete (M6 pending user review)
+**Created:** 2026-09-16 · **Status:** M0–M7 complete (M7 pending user review)
 **Rule:** Every major technical decision is recorded here with reason,
 alternatives considered, and consequences. Superseded decisions are struck
 through, not deleted.
@@ -611,6 +611,86 @@ counting them as false negatives. Fabricating recall against prose-only
 defects would misrepresent capability; M7's cross-version diff is the
 correct instrument for the rest.
 
+## D-036 — Comparison scoping on the project, not the document row (M7)
+
+The M1 schema models the synthetic corpus as one project containing two
+Document rows (ABC_HLD_v1.0.0.pdf, ABC_HLD_v1.1.0.pdf), one
+DocumentVersion each. "Versions from unrelated documents are rejected"
+therefore maps onto PROJECT scope: `load_both_snapshots` requires both
+versions to resolve under one project and rejects cross-project pairs.
+Both labels are mandatory; base == target is rejected (a comparison needs
+two distinct versions); unknown labels fail fast with the known-version
+list. Version isolation is enforced at the single load point — every
+snapshot, change and impact is scoped to exactly one DocumentVersion.
+
+## D-037 — Change identity: canonical keys and fact triples (M7)
+
+- **Entity identity** = the M4 canonical key (`component:C-05`). Added =
+  key in target only; removed = key in base only; changed = key in both
+  with a different typed-row display name (the only registry-level
+  attribute change with stable identity; the v1→v2 corpus shows exactly
+  one: the C-09 rename). Ordinary references never create entities.
+- **Relationship identity** = the fact TRIPLE (subject, predicate,
+  object, object_value) — NOT the raw fact_key. `fact_key` is the dedupe
+  identity WITHIN one version; across versions a semantic change produces
+  a new fact_key, and the task-preferred semantics fall out naturally:
+  changed relationships surface as REMOVED old + ADDED new. No synthetic
+  CHANGED_RELATIONSHIP exists. Within a version M4 guarantees one
+  fact_key per triple, so triple sets are well-defined on both sides.
+- **IDs** are content-addressed (`M7-ENT-ADD-<hash>`, `M7-REL-REM-<hash>`,
+  `M7-IMP-<hash>` over change+entity+depth): reproducible, no UUIDs,
+  re-running yields identical IDs so persistence and diffing are set
+  operations.
+
+## D-038 — Impact analysis: documented traversal rule (M7)
+
+Anchors follow the change: the changed entity for ENTITY_*; both fact
+endpoints for RELATIONSHIP_*; traversal runs in the TARGET graph for
+ADDED/CHANGED changes and the BASE graph for REMOVED (where the change is
+real). Depth 0 = anchor (DIRECT); depth 1 neighbors take the category of
+the first edge used (DEPENDENCY / INTERFACE_CONSUMER / INTERFACE_PROVIDER
+/ SIGNAL / FUNCTIONAL_FLOW); depth >= 2 is TRANSITIVE. BFS visits edges
+sorted by fact_key; each (change, entity) pair yields ONE impact at its
+minimum depth. Every recorded path step is a REAL stored edge, kept in
+walk order with forward/reverse direction, so V8 can re-verify each step
+against the scope graph — no invented hops. Wording is deliberately
+"potentially impacted": a graph-neighborhood statement, never a claim of
+functional breakage. Default depth 1 (conservative), `--depth` to widen.
+
+## D-039 — Comparison persistence: CompareRun upsert (M7)
+
+Reuses the existing M1 `compare_runs` table (present since M1, never
+previously populated) — no new tables. One row per (base, target) pair;
+re-running upserts `results_json` (payload embeds its params: depth,
+generator), so the store never grows duplicate comparisons. The registry
+remains the source of truth: any comparison is reproducible by rerunning
+the deterministic comparator; persistence is a convenience cache for M8.
+persist/clear append audit events via the existing audit-log helper.
+
+## D-040 — Revision evaluation: mechanical gold + honest applicability (M7)
+
+Gold comes from the GT registries themselves (the renderer's
+source-of-truth): entity added/removed = ID-set difference across all six
+families; entity changed = name-differs-with-stable-ID; relationship
+gold = the M4-evaluation fact derivation run on both GT versions and
+set-differenced (65 removed / 43 added, exactly reproduced by the
+comparator). Two documented `expected_diff` blind spots are cross-checked
+mechanically instead of papered over: it has no ports family (the 5
+removed ports P-053..P-057 come from `gt['ports']`), and its four
+"modified" interfaces (IF-03/13/20/24) differ in provider/consumers —
+fact-level attributes that are scored under relationship changes, where
+the evidence actually lives. Impact gold = independent replay of the
+D-038 rule over the gold fact graphs (per side), plus explicit D1/D8
+anchor assertions. Applicability stays honest (continuing D-035): D1
+(removed dependency) and D8 (new consumer) are structurally applicable
+and detected; D2 is not applicable — M4 canonicalized consumers to
+stable IDs, and the stale name survives only as free text in
+`component:C-09.description` (STALE_REFERENCE requires a fact endpoint,
+not prose); D3/D5/D6/D7 remain prose-vs-structure defects with reasons,
+never false negatives. Change is NOT defect: RELATIONSHIP_REMOVED is
+reported as a change; findings arise only from explicit rules
+(stale_reference today).
+
 ## Open items / pending decisions
 
 - **M7 diff:** edge identity = `fact_key` (D-027) makes the v1→v2 edge
@@ -622,6 +702,14 @@ correct instrument for the rest.
   yet available; both `scripts/ask_copilot.py --provider openrouter` and
   `scripts/extract_entities.py --provider openrouter --llm` are ready to
   run once configured. Default model remains `google/gemma-3-27b-it:free`.
+- **D2 stale-name witness:** detectable only from prose (the old C-09
+  name inside `component:C-09.description`); a prose-level detector
+  (RAG-text based, outside the structured registry) could close this —
+  deferred as out of M7's structural scope.
+- **Registry name hygiene:** v2's C-09 display name extracted as
+  `VehicleModeMgrSW C` (stray space from PDF text extraction); identity,
+  keys and diffs are unaffected. A registry-side whitespace-normalization
+  pass could clean it without touching M0/M1.
 - **pyvis 0.3.2 template hygiene:** its HTML template hardcodes two dead
   resource blocks (commented node_modules/vis pair, cosmetic bootstrap CDN
   tags); `render_html` strips them deterministically so exports are fully

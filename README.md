@@ -35,7 +35,8 @@ findings, and revision impact out. Human review stays in the loop.
 | M4 | Structured extraction + SQLite registry + evaluation | ✅ complete |
 | M5 | Architecture Graph Explorer (NetworkX + pyvis) | ✅ complete |
 | M6 | Deterministic architecture findings + analysis CLI | ✅ complete |
-| M7–M8 | Revision diff → final Streamlit app | planned |
+| M7 | Revision compare + impact analysis (deterministic diff) | ✅ complete |
+| M8 | Final Streamlit application | planned |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
 `docs/PROJECT_DECISIONS.md` for every major design decision.
@@ -51,7 +52,10 @@ python -m venv .venv
 .venv/Scripts/python scripts/evaluate_retrieval.py        # page_hit@K / MRR vs ground truth
 .venv/Scripts/python scripts/analyze_findings.py --version 1.1.0      # deterministic findings (M6)
 .venv/Scripts/python scripts/evaluate_findings.py                     # findings P/R/F1 vs planted defects
-.venv/Scripts/python -m pytest tests/                     # 348 tests
+.venv/Scripts/python scripts/compare_revisions.py \
+    --base-version 1.0.0 --target-version 1.1.0           # revision diff + impact (M7)
+.venv/Scripts/python scripts/evaluate_revisions.py        # diff P/R/F1 vs ground truth
+.venv/Scripts/python -m pytest tests/                     # 403 tests
 ```
 
 ### Ask the copilot (M3, offline by default)
@@ -282,9 +286,32 @@ rule tiers, not safety ratings.
 **Measured** (`scripts/evaluate_findings.py`): v1.0.0 is a clean baseline
 (0 findings); v1.1.0 detects the planted D4 orphan (C-05) with
 **P = R = F1 = 1.000** on applicable gold. The other planted defects are
-prose-vs-structure or cross-version (M7 scope) and are reported as
-not-applicable with reasons (D-035) — never silently skipped, never
-fabricated.
+prose-vs-structure or cross-version and are reported as not-applicable
+with reasons (D-035) — never silently skipped, never fabricated.
+
+## M7 revision compare (fully offline, no LLM)
+
+```bash
+.venv/Scripts/python scripts/compare_revisions.py \
+    --base-version 1.0.0 --target-version 1.1.0          # required pair
+.venv/Scripts/python scripts/compare_revisions.py \
+    --base-version 1.0.0 --target-version 1.1.0 --depth 2 --json
+.venv/Scripts/python scripts/compare_revisions.py \
+    --base-version 1.0.0 --target-version 1.1.0 --persist   # cache run
+.venv/Scripts/python scripts/evaluate_revisions.py --save             # P/R/F1
+```
+
+Entity diff runs on canonical M4 keys, relationship diff on fact-triple
+identity, both carrying trusted provenance from the registry (D-037).
+Impact analysis is a deterministic BFS over the version graphs with
+real-edge paths, controlled categories, and configurable depth (D-038);
+every impact path is mechanically re-verified against the graph (V8).
+Changes are changes — findings (e.g. `stale_reference`) arise only from
+explicit deterministic rules. Measured on the synthetic pair: 0 added /
+16 removed / 1 renamed entities, 43 added / 65 removed relationships,
+974 impacts at depth 1 — **P = R = F1 = 1.000** on every applicable gold
+family, with D1 (removed dependency) and D8 (new consumer) detected and
+prose-only defects reported not-applicable with reasons (D-040).
 
 ## M5 graph architecture
 
@@ -318,15 +345,18 @@ backend/
                  JSON/GraphML export, pyvis rendering, service, evaluation
   findings/      M6: finding model, six deterministic detectors, engine,
                  validator (V1-V10), idempotent persistence, evaluation
-  diff/          M7: revision comparator + impact
+  diff/          M7: two-version context, entity/relationship diff, impact
+                 analysis, revision findings, validation (V1-V9),
+                 CompareRun persistence, evaluation
   storage/       SQLite schema, sessions, audit log
   services/      application layer (UI-agnostic business logic)
 app/             Streamlit UI (M8)
 scripts/         dataset generation, ingestion, indexing, evaluation,
                  copilot CLI, gate calibration, extraction + registry CLIs,
                  graph explorer + graph evaluation,
-                 findings analysis + findings evaluation
-tests/           pytest suite (348 tests green at M6; opt-in model tests)
+                 findings analysis + findings evaluation,
+                 revision compare + revision evaluation
+tests/           pytest suite (403 tests green at M7; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
 data/            generated artifacts (gitignored: processed/, vectors/,
                  evaluation/, db/, graphs/, exports/)

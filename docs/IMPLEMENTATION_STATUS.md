@@ -1,7 +1,7 @@
 # IMPLEMENTATION_STATUS
 
-**Updated:** 2026-09-17 (M0 + M1 + M2 + M3 + M4 + M5 + M6 complete)
-**Deadline:** 2026-09-26 · **Gate:** M7 starts after user review of this M6 report.
+**Updated:** 2026-09-18 (M0 + M1 + M2 + M3 + M4 + M5 + M6 + M7 complete)
+**Deadline:** 2026-09-26 · **Gate:** M8 starts after user review of this M7 report.
 
 ---
 
@@ -98,12 +98,94 @@
 - *(nothing — M6 complete, stopped at the milestone gate)*
 
 ## Next up (requires approval)
-- M7: v1→v2 revision compare — node diff over canonical keys, edge diff
-  over `fact_key` identity (D-027); added/removed/changed relationships
-  with per-change provenance and impact lists. The remaining planted
-  defects (D1 removed dependency, D2 stale reference, D6 contradiction,
-  D7 prose/table mismatch, D8 impact-relevant change) form the natural
-  M7 gold set (D-035).
+- M8: final Streamlit application — copilot chat (M3), retrieval/extraction
+  inspection, findings review workflow (M6 statuses are already
+  persistence-backed), graph explorer embed (M5 HTML), revision compare
+  view (M7 `RevisionComparison.to_dict()`), acceptance-test harness.
+  All backend subsystems above expose UI-agnostic facades ready for it.
+
+## M7 — Revision Compare / Impact Analysis (complete)
+
+### Architecture
+
+```
+DocumentVersion (1.0.0)     DocumentVersion (1.1.0)
+  M4 registry snapshot  x  M4 registry snapshot       load_both_snapshots
+        └───────────┬───────────┘    (same-project check, D-036)
+                    ▼
+         RevisionComparator.compare(base, target, depth)   comparator.py
+          ├─ entity diff        canonical keys  → 0 add / 16 rem / 1 chg
+          ├─ relationship diff  fact triples    → 43 add / 65 rem
+          ├─ impact analysis    BFS, real-edge  → 974 items @ depth 1
+          │                     paths, D-038 categories
+          ├─ revision findings  stale_reference rule
+          └─ mechanical validation V1–V9 (real-graph path re-check)
+                    ▼
+  RevisionComparison (deterministic IDs M7-*; sorted; to_json())
+                    ▼ persist_comparison → compare_runs upsert (D-039)
+```
+
+### Measured results (1.0.0 → 1.1.0, depth 1)
+
+| change family | gold | detected | TP | FP | FN | P | R | F1 |
+|---|---|---|---|---|---|---|---|---|
+| entity_added | 0 | 0 | 0 | 0 | 0 | – | – | – |
+| entity_removed | 16 | 16 | 16 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| entity_changed | 1 | 1 | 1 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| relationship_added | 43 | 43 | 43 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| relationship_removed | 65 | 65 | 65 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| impact | 137 | 137 | 137 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+
+Planted-defect verdicts: **D1** (removed dependency) and **D8** (new
+consumer of changed interface) structurally applicable and detected with
+impact anchors reaching the expected entities; D2/D3/D5/D6/D7
+not-applicable with documented reasons (D-040) — prose-vs-structure
+defects, never counted as false negatives.
+
+### Performance (measured)
+
+Context ≈ 140–170 ms (both registries + graphs); entity+relationship diff
+≈ 6–8 ms; impact (974 items) ≈ 35–45 ms; validation ≈ 45–55 ms; total
+≈ 135–270 ms. Deterministic: repeated runs produce byte-identical JSON
+(modulo timings).
+
+### Files
+
+- Created: `backend/diff/{__init__,models,context,entity_diff,
+  relationship_diff,impact,revision_findings,validation,comparator,
+  persistence,evaluation}.py`, `scripts/compare_revisions.py`,
+  `scripts/evaluate_revisions.py`, `tests/test_diff_models_diffs.py`,
+  `tests/test_diff_comparator_impact_eval.py`
+- Modified: `docs/PROJECT_DECISIONS.md` (D-036…D-040),
+  `docs/IMPLEMENTATION_STATUS.md`, `README.md`. No M0–M6 code touched.
+
+### Verification (all run)
+
+- Full suite: **403 passed, 1 deselected** (was 348; +55 M7 tests,
+  nothing removed or weakened)
+- CLI: `compare_revisions.py --base-version 1.0.0 --target-version
+  1.1.0` (summary + provenance), `--json`, `--persist` (created →
+  updated idempotency, same compare_run_id), `--reset`, `--depth 2`
+  (3144 impacts, validation clean), reversed pair works,
+  same-version rejected with exit 2
+- `evaluate_revisions.py --save` → `data/evaluation/revision_evaluation.json`
+- Version isolation: every change/impact scoped to exactly one version
+  (tested structurally); same-project enforcement tested
+- External doc `AUTOSAR_EXP_PlatformDesign.pdf`: M7 comparison NOT
+  applicable — no M4 structured extraction exists for it (unchanged
+  since M6)
+
+### Limitations
+
+- D2's stale-name witness is prose-only (M4 canonicalized consumers to
+  stable IDs); STALE_REFERENCE requires a fact endpoint, so D2 is
+  structurally undetectable (documented, not fabricated).
+- Impact items are graph-neighborhood statements ("potentially
+  impacted"), not functional breakage claims; categories are rule tiers.
+- ENTITY_CHANGED covers typed-row renames only; fact-level attribute
+  changes surface as REMOVED+ADDED pairs by design (D-037).
+- v2 C-09 display name carries a PDF-extraction space
+  (`VehicleModeMgrSW C`); identity/keys unaffected (open item).
 
 ## Test status
 
@@ -319,8 +401,8 @@ Evidence gate calibration (one-shot grid, D-019,
 | M4 | Structured extraction + registry + evaluation | Sep 20 | ✅ complete |
 | M5 | Graph explorer from the extraction registry | Sep 21 | ✅ complete |
 | M6 | Deterministic checks + findings review UI | Sep 22 | done (backend + CLI; review UI lands in M8) |
-| M7 | Revision compare + impact analysis | Sep 24 | next |
-| M8 | Polish, export, evaluation harness, acceptance test | Sep 24 | — |
+| M7 | Revision compare + impact analysis | Sep 24 | done (backend + CLI + evaluation) |
+| M8 | Polish, export, evaluation harness, acceptance test | Sep 24 | next |
 | — | Docs, traceability matrix, Drive submission | Sep 25 | — |
 | — | Demo dry-runs, backup | Sep 26 | — |
 
