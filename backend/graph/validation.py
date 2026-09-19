@@ -11,6 +11,10 @@ import networkx as nx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from backend.extraction.autosar.models import (AutosarEntityType,
+                                               AutosarPredicate,
+                                               PREDICATE_DOMAIN as AU_DOM,
+                                               PREDICATE_RANGE as AU_RNG)
 from backend.extraction.models import Predicate
 from backend.graph.models import (ATTR_CONFIDENCE, ATTR_FACT_KEY,
                                   ATTR_OBJECT_VALUE, ATTR_PREDICATE,
@@ -18,7 +22,8 @@ from backend.graph.models import (ATTR_CONFIDENCE, ATTR_FACT_KEY,
                                   ATTR_VERSION, GraphValidationResult)
 from backend.storage.models import ExtractionFact
 
-VALID_PREDICATES = {p.value for p in Predicate}
+VALID_PREDICATES = ({p.value for p in Predicate}
+                    | {p.value for p in AutosarPredicate})
 
 
 def validate_graph(g: nx.MultiDiGraph, session: Session | None = None
@@ -46,10 +51,22 @@ def validate_graph(g: nx.MultiDiGraph, session: Session | None = None
         elif "unregistered" in endpoint_types:
             res.warnings.append(
                 f"edge endpoint not in typed registry: {label}")
-        # 2. valid predicate
+        # 2. valid predicate (profile union; ABC + AUTOSAR vocabularies)
         pred = d.get(ATTR_PREDICATE)
         if pred not in VALID_PREDICATES:
             res.errors.append(f"invalid predicate {pred!r}: {label}")
+        # 2b. AUTOSAR-profile facts also honor domain/range constraints
+        elif (str(u).startswith("autosar:") and str(v).startswith("autosar:")
+                and pred in AU_DOM):
+            su, sv = str(u).split(":"), str(v).split(":")
+            if len(su) == 3 and len(sv) == 3:
+                try:
+                    if (AutosarEntityType(su[1]) not in AU_DOM[pred]
+                            or AutosarEntityType(sv[1]) not in AU_RNG[pred]):
+                        res.errors.append(
+                            f"domain/range violation: {label}")
+                except ValueError:
+                    res.errors.append(f"invalid autosar endpoint type: {label}")
         # 3. provenance present + version match
         prov = d.get(ATTR_PROVENANCE)
         if not prov or not isinstance(prov, dict) or not prov.get("document_name"):
@@ -67,8 +84,18 @@ def validate_graph(g: nx.MultiDiGraph, session: Session | None = None
         else:
             seen_fact_keys.add(fk)
 
-    # 5. canonical node keys ("type:ID" shape)
+    # 5. canonical node keys ("type:ID" shape for the ABC profile;
+    #    "autosar:<type>:<name>" for the M9 AUTOSAR profile)
     for n in g.nodes:
+        if str(n).startswith("autosar:"):
+            parts = str(n).split(":")
+            if len(parts) != 3 or not all(parts):
+                res.warnings.append(f"non-canonical autosar node key: {n!r}")
+            elif g.nodes[n].get(ATTR_TYPE) not in (None, parts[1]):
+                res.warnings.append(
+                    f"node type mismatch: {n!r} typed "
+                    f"{g.nodes[n].get(ATTR_TYPE)!r}")
+            continue
         etype, _, eid = str(n).partition(":")
         if not etype or not eid or etype != etype.strip():
             res.warnings.append(f"non-canonical node key: {n!r}")

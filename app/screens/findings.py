@@ -13,10 +13,10 @@ from __future__ import annotations
 import streamlit as st
 
 from app import state
-from app.components import fmt_provenance
+from app.components import fmt_provenance, profile_badge
 from app.services import (ServiceError, analyze_findings,
                           filter_findings, findings_breakdown,
-                          get_findings_from_db, get_versions)
+                          get_findings_from_db, get_versions_profiled)
 
 _SEVERITIES = ["high", "medium", "low", "info"]
 _STATUSES = ["open", "accepted", "rejected", "needs_discussion"]
@@ -24,7 +24,7 @@ _STATUSES = ["open", "accepted", "rejected", "needs_discussion"]
 
 def render() -> None:
     try:
-        versions = [v for v in get_versions() if v["has_registry"]]
+        versions = [v for v in get_versions_profiled() if v["has_registry"]]
     except ServiceError as exc:
         st.error(f"Database unavailable: {exc}")
         return
@@ -41,6 +41,19 @@ def render() -> None:
     chosen = st.selectbox("Version", labels, index=idx)
     sel = versions[labels.index(chosen)]
     state.set_version(sel["version"])
+
+    # Profile-aware detector set (M9): the message names the suite so the
+    # user knows why different versions run different deterministic checks.
+    if sel["profile"] == "autosar_adaptive_platform":
+        st.caption(f"Detector set: {profile_badge(sel['profile'])} — "
+                   "undefined reference, missing endpoint, inconsistent "
+                   "classification (ABC suite rules do not apply to this "
+                   "profile).")
+    elif sel["profile"] == "application_hld":
+        st.caption(f"Detector set: {profile_badge(sel['profile'])} — full "
+                   "M6 ABC suite (undefined reference, dangling requires, "
+                   "duplicate interface, conflicting providers, orphan "
+                   "entity, unconsumed signal).")
 
     acols = st.columns([2, 2, 1.4])
     with acols[0]:

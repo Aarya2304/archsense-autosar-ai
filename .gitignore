@@ -40,6 +40,9 @@ data/graphs/
 data/exports/
 data/processed/
 data/evaluation/
+
+# M9 user uploads (PDFs, processed JSON, isolated Chroma collection)
+data/uploads/
 # Keep the generator + fixtures themselves in version control;
 # generated HLD PDFs, DBs, vector stores and exports are build artifacts.
 data/generated/

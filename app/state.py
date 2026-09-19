@@ -18,6 +18,7 @@ import streamlit as st
 
 # screen ids used by navigation.py / set_screen()
 DASHBOARD = "dashboard"
+UPLOAD = "upload"
 WORKSPACE = "workspace"
 EXPLORER = "explorer"
 COPILOT = "copilot"
@@ -25,7 +26,8 @@ FINDINGS = "findings"
 COMPARE = "compare"
 EXPORT = "export"
 
-_SCREENS = (DASHBOARD, WORKSPACE, EXPLORER, COPILOT, FINDINGS, COMPARE, EXPORT)
+_SCREENS = (DASHBOARD, UPLOAD, WORKSPACE, EXPLORER, COPILOT, FINDINGS,
+            COMPARE, EXPORT)
 
 # (key, default) pairs initialised on first run.
 _DEFAULTS: list[tuple[str, Any]] = [
@@ -64,6 +66,9 @@ _DEFAULTS: list[tuple[str, Any]] = [
         "comparison": True,
         "evidence": True,
     }),
+    # M9 upload workflow (explicit processing only; no upload state is
+    # carried between reruns except the last results list for display)
+    ("as_last_uploads", None),       # list of UploadPipelineResult dicts
 ]
 
 
@@ -102,3 +107,11 @@ def set_version(version: str | None) -> None:
     st.session_state.as_finding_type_filter = None
     st.session_state.as_status_filter = None
     st.session_state["as_last_report"] = None  # report is version-paired
+    # M9: the graph cache is keyed per version, so a new/changed upload only
+    # needs the data snapshot invalidated (vector stores are collection-level
+    # resources and are shared, not cached per document).
+    try:
+        from app.services.app_services import _processed_sections
+        _processed_sections.cache_clear()
+    except Exception:  # noqa: BLE001 - best effort
+        pass

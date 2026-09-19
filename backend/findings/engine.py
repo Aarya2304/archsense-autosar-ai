@@ -16,12 +16,22 @@ from dataclasses import dataclass, field
 
 from sqlalchemy.orm import Session
 
+from backend.findings.autosar_detectors import AUTOSAR_DETECTORS
 from backend.findings.context import build_analysis_context
 from backend.findings.detectors import ALL_DETECTORS
 from backend.findings.models import Finding, FindingType
 from backend.findings.validator import validate_findings
 
-__all__ = ["EngineResult", "FindingEngine"]
+__all__ = ["EngineResult", "FindingEngine", "DETECTOR_SETS"]
+
+# Profile-aware detector sets (M9): the ABC suite applies to the synthetic
+# HLD profile; the AUTOSAR profile gets only detectors meaningful for its
+# vocabulary (never manufacture defects; zero findings is a valid result).
+DETECTOR_SETS: dict[str, dict] = {
+    "application_hld": dict(ALL_DETECTORS),
+    "autosar_adaptive_platform": dict(AUTOSAR_DETECTORS),
+    "generic": {},                       # no registry -> no detectors
+}
 
 
 @dataclass
@@ -52,11 +62,20 @@ class EngineResult:
 
 
 class FindingEngine:
-    """Runs the deterministic detector suite over one version."""
+    """Runs the deterministic detector suite over one version.
 
-    def __init__(self, detectors: dict | None = None) -> None:
-        self._detectors = dict(detectors) if detectors is not None \
-            else dict(ALL_DETECTORS)
+    ``profile`` selects the detector set (M9); the default keeps the full
+    ABC suite so existing callers (M6 tests/CLI/UI) are unaffected. An
+    explicit ``detectors`` dict overrides everything.
+    """
+
+    def __init__(self, detectors: dict | None = None,
+                 profile: str = "application_hld") -> None:
+        if detectors is not None:
+            self._detectors = dict(detectors)
+        else:
+            self._detectors = dict(DETECTOR_SETS.get(profile,
+                                                     DETECTOR_SETS["generic"]))
 
     def run(self, session: Session, version_label: str,
             finding_types: list[str] | None = None) -> EngineResult:

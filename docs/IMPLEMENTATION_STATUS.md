@@ -1,7 +1,7 @@
 # IMPLEMENTATION_STATUS
 
-**Updated:** 2026-09-18 (M0–M8 complete: all milestones implemented, tested and verified)
-**Deadline:** 2026-09-26 · M8 delivered; remaining time is for review, demo dry-runs and submission.
+**Updated:** 2026-09-18 (M0–M9 complete: all milestones implemented, tested and verified)
+**Deadline:** 2026-09-26 · M9 delivered; remaining time is for review, demo dry-runs and submission.
 
 ---
 
@@ -95,11 +95,63 @@
 
 ## Currently implementing
 
-- *(nothing — M8 complete; all eight milestones delivered)*
+- *(nothing — M9 complete; all nine milestones delivered)*
 
 ## Next up (requires approval)
 - *(none — project milestones complete; remaining work is review, demo
   dry-runs, traceability matrix and submission per the schedule below)*
+
+## M9 — Real AUTOSAR Adaptive Platform support + user uploads (COMPLETE)
+
+**Delivered:** `backend/uploads/` (safe storage: SHA-256 content dedupe,
+sanitized filenames, PDF-only + size cap; evidence-based profile detection
+`application_hld` / `autosar_adaptive_platform` / `generic` (D-048);
+upload pipeline `upload → M1 → M2 (isolated `uploads_chunks` collection,
+D-047) → profile → structured extraction`); `backend/extraction/autosar/`
+(small ontology derived from the real R20-11 document — 10 entity types,
+10 predicates; deterministic line-windowed extractor with negation guards
+and ToC exclusion; validator; persistence into the new generic
+`extraction_entities` table + existing `extraction_facts`); profile-aware
+M5 graph building/validation, M6 detector-set routing and M7 same-profile
+gating (D-050); `app/screens/upload.py` + Upload navigation + dashboard
+profile flags; `scripts/ingest_upload.py` CLI.
+
+**Real-document validation** (AUTOSAR_EXP_PlatformDesign.pdf, R20-11,
+Document ID 706): **34 entities** (16 functional_cluster, 6 interface,
+4 manifest, 1 each adaptive_application/ara/machine/process/service/
+platform_foundation/platform_service/software_package), **77 facts**
+(interacts_with 25, uses_interface 21, configured_by 9,
+provides_interface 7, provides_service 6, belongs_to 3, implemented_as 3,
+runs_on/commands/updates 1 each), **77/77 facts with trusted provenance**
+(chunk → document/section/page), **0 validation errors** (0 dangling
+endpoints, 0 invalid predicates). Hand-verified spot checks against the
+source prose include section 3.1.1 ARA pp. 15–16 (adaptive applications
+run on ARA; FCs belong to Adaptive Platform Foundation / Services).
+No gold standard exists — no precision/recall is claimed.
+
+**Verification:** full pipeline run on the real 80-page PDF (profile
+`autosar_adaptive_platform`, 173 chunks, isolated collection); AUTOSAR
+graph 34n/77e valid; AUTOSAR findings detectors run honest (0 findings);
+cross-profile compare refused; generic PDF keeps M1–M3 only with explicit
+"structured analysis unavailable" UI; ABC v1.0.0/v1.1.0 behavior unchanged
+(165/200 graph, orphan_entity finding, M7 diff 0/16/1 + 43/65). Streamlit
+AppTest run renders Dashboard, Upload screen and Explorer with the
+AUTOSAR version; entity details show real provenance (Section 3.1.1 ARA ·
+pp. 15–16); export includes profile in Document Information.
+
+**Tests:** **481 passed, 1 deselected** (was 435; +46 M9 tests across
+upload/profile, AUTOSAR extraction/validation/persistence/findings, and
+app-services/UI AppTest files).
+
+**Performance (measured):** ingest 29.8 s · index 41.3 s (embedder cold
+start; warm runs skip reload) · AUTOSAR extraction 0.98 s · graph build
+51 ms · findings 50 ms · report generation 91 ms (80-page real document).
+
+**Limitations:** the AUTOSAR ontology is small and explanatory-document
+scoped (no claim of universal AUTOSAR understanding); no gold standard
+for the real document (coverage + spot checks only); revision compare for
+AUTOSAR requires a second compatible structured revision; profile
+override UI not exposed (detection is deterministic and tested).
 
 ## M7 — Revision Compare / Impact Analysis (complete)
 
@@ -423,8 +475,9 @@ Screen battery: `python scripts/verify_app_screens.py` (exit 0).
 **Limitations:** findings review stays read-only in this UI (safe per-finding
 review mutation is not exposed by M6 yet); findings screen shows persisted
 state read-only or a fresh uncached run, never silently; external AUTOSAR
-PDF still has no M4 extraction, so the UI shows its ingestion/RAG status
-only — no fabricated entities/findings/graph for it.
+PDF had no M4 extraction at M8 time, so the UI showed its ingestion/RAG
+status only — no fabricated entities/findings/graph for it. *(Superseded
+by M9: the AUTOSAR profile adds structured analysis for this document.)*
 
 ## Remaining work (milestone view)
 
@@ -436,6 +489,7 @@ only — no fabricated entities/findings/graph for it.
 | M6 | Deterministic checks + findings review UI | Sep 22 | done (backend + CLI; read-only review UI in M8) |
 | M7 | Revision compare + impact analysis | Sep 24 | done (backend + CLI + evaluation) |
 | M8 | Streamlit application: 7 screens, exports, verification | Sep 24 | done (UI + services + 61-check screen battery) |
+| M9 | Real AUTOSAR support + user PDF upload | Sep 25 | done (uploads + AUTOSAR profile + real-doc validation) |
 | — | Docs, traceability matrix, Drive submission | Sep 25 | — |
 | — | Demo dry-runs, backup | Sep 26 | — |
 

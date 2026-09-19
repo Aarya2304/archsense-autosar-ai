@@ -25,8 +25,8 @@ from sqlalchemy.orm import Session
 
 from backend.graph.builder import build_graph
 from backend.storage.models import (Component, Dependency, DocumentVersion,
-                                    ExtractionFact, FunctionalFlow,
-                                    Interface, Port, Signal)
+                                    ExtractionEntity, ExtractionFact,
+                                    FunctionalFlow, Interface, Port, Signal)
 
 ENTITY_TABLES: dict[str, type] = {
     "component": Component,
@@ -45,7 +45,13 @@ def canonical_key(key: str) -> str:
     the graph builder's node keys (``component:C-05``) — registry rows are
     stored uppercased by M4 persistence, so this makes context lookups and
     graph nodes agree bit-for-bit.
+
+    M9: keys in the ``autosar:`` namespace are ALREADY canonical (lowercase
+    name-addressed, produced by the AUTOSAR extractor) and are returned
+    unchanged — uppercasing would mangle them into unresolvable keys.
     """
+    if key.startswith("autosar:"):
+        return key
     etype, sep, eid = key.partition(":")
     if not sep:
         return key
@@ -92,6 +98,12 @@ def build_analysis_context(session: Session, version_label: str) -> AnalysisCont
         for row in session.execute(select(model).where(
                 model.version_id == dv.id)).scalars():
             entities[canonical_key(f"{etype}:{row.entity_id}")] = row
+
+    # M9: profile-generic entities (e.g. autosar:*) join the same key space;
+    # their keys are already canonical and namespace-disjoint.
+    for row in session.execute(select(ExtractionEntity).where(
+            ExtractionEntity.version_id == dv.id)).scalars():
+            entities[row.canonical_key] = row
 
     facts: dict[str, object] = {}
     provides: dict[str, set[str]] = defaultdict(set)
@@ -143,14 +155,24 @@ def provenance_of_fact(f) -> dict:
 
 
 def provenance_of_entity(row) -> dict:
-    """Trusted provenance for a typed registry row (D-022 snapshot)."""
+    """Trusted provenance for a typed or profile-generic registry row.
+
+    Typed M4 rows (Component/Interface/...) carry section/page columns;
+    M9 ``ExtractionEntity`` rows carry the full trusted snapshot in their
+    ``attributes_json.provenance`` (document/version/pages/chunk). Both
+    shapes resolve here without inventing metadata (D-022/D-028).
+    """
+    entity_id = getattr(row, "entity_id", None) or getattr(
+        row, "canonical_key", "")
+    snap = (getattr(row, "attributes_json", None) or {}).get(
+        "provenance") or {}
     return {
-        "document_name": "",
-        "version_label": "",
-        "section_no": row.section or "",
-        "section_title": "",
-        "page_start": row.page or 0,
-        "page_end": row.page or 0,
-        "source_chunk_id": "",
-        "entity_id": row.entity_id,
+        "document_name": snap.get("document_name", ""),
+        "version_label": snap.get("version_label", ""),
+        "section_no": snap.get("section_no", row.section or ""),
+        "section_title": snap.get("section_title", ""),
+        "page_start": snap.get("page_start", row.page or 0),
+        "page_end": snap.get("page_end", row.page or 0),
+        "source_chunk_id": snap.get("source_chunk_id", ""),
+        "entity_id": entity_id,
     }

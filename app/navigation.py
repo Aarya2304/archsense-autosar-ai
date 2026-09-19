@@ -15,6 +15,7 @@ from app import state
 def screen_title(screen: str) -> str:
     titles = {
         state.DASHBOARD: "Dashboard",
+        state.UPLOAD: "Upload Documents",
         state.WORKSPACE: "Document Workspace",
         state.EXPLORER: "Architecture Explorer",
         state.COPILOT: "Copilot",

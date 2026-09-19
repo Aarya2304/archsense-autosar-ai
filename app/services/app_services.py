@@ -28,7 +28,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend.config import DB_PATH, PROCESSED_DIR  # noqa: E402
+from backend.config import (DB_PATH, PROCESSED_DIR,  # noqa: E402
+                            UPLOADS_DIR, UPLOADS_PROCESSED_DIR)
 from backend.storage.database import (  # noqa: E402
     init_schema,
     make_engine,
@@ -126,9 +127,15 @@ def get_versions(session=None) -> list[dict]:
 
 @lru_cache(maxsize=8)
 def _processed_sections(document_name: str) -> tuple[tuple[str, int], ...]:
-    """(section_no, page) pairs from the M1 processed JSON (cached)."""
+    """(section_no, page) pairs from the M1 processed JSON (cached).
+
+    Demo corpus records live in ``data/processed``; M9 upload records in
+    ``data/uploads/processed`` — both are the same M1 format.
+    """
     stem = document_name.removesuffix(".pdf")
     path = PROCESSED_DIR / f"{stem}__processed.json"
+    if not path.is_file():
+        path = UPLOADS_PROCESSED_DIR / f"{stem}__processed.json"
     if not path.is_file():
         return ()
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -177,7 +184,11 @@ def get_document_summary(version_label: str, session=None) -> dict | None:
 
 
 def get_pdf_path(document_name: str) -> Path | None:
-    """Locate the source PDF: the path M1 recorded, then sample dirs."""
+    """Locate the source PDF: the path M1 recorded, then sample dirs.
+
+    M9 uploads are stored as ``data/uploads/{digest8}_{safe_name}``; the
+    digest prefix is resolved by suffix match on the registered filename.
+    """
     candidates = [
         PROCESSED_DIR.parent / "sample_docs" / document_name,
         PROCESSED_DIR.parent / "external_test" / document_name,
@@ -186,6 +197,10 @@ def get_pdf_path(document_name: str) -> Path | None:
     for cand in candidates:
         if cand.is_file():
             return cand
+    if UPLOADS_DIR.is_dir():
+        for cand in sorted(UPLOADS_DIR.glob(f"*_{document_name}")):
+            if cand.is_file():
+                return cand
     return None
 
 
@@ -195,20 +210,33 @@ def get_page_text(document_name: str, version: str, page_no: int) -> str:
     Chunk text lives in the M2 Chroma index (the pipeline stores chunks
     there, not in the SQLite ``chunks`` table), so this reads the store's
     chunk metadata — the same trusted provenance the retriever uses.
+    M9 uploads are indexed into the ISOLATED upload collection, which is
+    probed as a fallback (D-047: the main corpus collection is never
+    modified by uploads).
     Returns "" when the index is unavailable (caller shows a note).
     """
-    try:
-        store = _vector_store()
-    except ServiceError:
-        return ""
-    parts: list[str] = []
-    for c in sorted(store.get_all_chunks(),
-                    key=lambda c: (c.section_no, c.chunk_seq)):
-        if (c.document_name == document_name
-                and str(c.version) == str(version)
-                and int(c.page_start) <= page_no <= int(c.page_end)):
-            parts.append(c.text)
+    parts: list[str] = _page_text_from_store(_vector_store(),
+                                             document_name, version, page_no)
+    if not parts:
+        try:
+            from app.services.m9_services import get_upload_vector_store
+            parts = _page_text_from_store(get_upload_vector_store(),
+                                          document_name, version, page_no)
+        except Exception:  # noqa: BLE001 - upload store optional
+            pass
     return "\n\n".join(parts)
+
+
+def _page_text_from_store(store, document_name: str, version: str,
+                          page_no: int) -> list[str]:
+    """Chunk texts of one page from one store (shared filter logic)."""
+    return [
+        c.text for c in sorted(store.get_all_chunks(),
+                               key=lambda c: (c.section_no, c.chunk_seq))
+        if (c.document_name == document_name
+            and str(c.version) == str(version)
+            and int(c.page_start) <= page_no <= int(c.page_end))
+    ]
 
 
 # ---------------------------------------------------------------------------

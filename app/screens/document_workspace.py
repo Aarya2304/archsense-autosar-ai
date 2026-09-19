@@ -14,14 +14,14 @@ from __future__ import annotations
 import streamlit as st
 
 from app import state
-from app.components import render_page_svg
+from app.components import profile_badge, render_page_svg
 from app.services import (ServiceError, get_document_summary, get_page_text,
-                          get_pdf_path, get_versions)
+                          get_pdf_path, get_versions_profiled)
 
 
 def render() -> None:
     try:
-        versions = get_versions()
+        versions = get_versions_profiled()
     except ServiceError as exc:
         st.error(f"Database unavailable: {exc}")
         return
@@ -41,8 +41,13 @@ def render() -> None:
     summary = get_document_summary(sel["version"])
     if summary is None:
         st.error(f"No processed record for {sel['document_name']} "
-                 f"v{sel['version']}.")
+                 f"({sel['version']}).")
         return
+    st.caption(f"Profile: {profile_badge(sel['profile'])} — "
+               + ("full structured analysis available" if sel["structured"]
+                  and sel["has_registry"] else
+                  "retrieval (M1–M3) available; structured analysis "
+                  "unavailable for this profile"))
 
     left, center, right = st.columns([2.2, 5, 2.8], gap="medium")
 
@@ -84,8 +89,8 @@ def render() -> None:
         if pdf_path is None:
             st.info(
                 "Source PDF not found on disk — showing the page's indexed "
-                "text instead (right panel). Place the PDF under "
-                "`data/sample_docs/` to enable the rendered preview.")
+                "text instead (right panel). For uploads, the PDF must still "
+                "exist under `data/uploads/` (runtime storage).")
         else:
             zoom = st.slider("Zoom", 1.0, 3.0, 1.5, 0.25, key="ws_zoom")
             try:

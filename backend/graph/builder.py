@@ -31,8 +31,8 @@ from backend.graph.models import (ATTR_CONFIDENCE, ATTR_KEY, ATTR_NAME,
                                   ATTR_VERSION, GraphEdge,
                                   GraphStatistics, Provenance)
 from backend.storage.models import (Component, Dependency, DocumentVersion,
-                                    ExtractionFact, FunctionalFlow,
-                                    Interface, Port, Signal)
+                                    ExtractionEntity, ExtractionFact,
+                                    FunctionalFlow, Interface, Port, Signal)
 from backend.graph.models import ATTR_FACT_KEY
 
 
@@ -51,6 +51,47 @@ def _node_attrs(etype: str, entity_id: str, name: str, version: str,
     if extra:
         attrs.update({k: v for k, v in extra.items() if v})
     return attrs
+
+
+def _autosar_nodes(session: Session, version_id: int,
+                   version: str) -> dict[str, dict]:
+    """Nodes from the M9 profile-generic ``extraction_entities`` table.
+
+    Only profile-specific vocabularies (e.g. ``autosar:*`` keys) live here;
+    ABC-profile entities are stored in the typed tables above, so the two
+    sources are disjoint by construction and cannot double-register a node.
+    """
+    nodes: dict[str, dict] = {}
+    for row in session.execute(select(ExtractionEntity).where(
+            ExtractionEntity.version_id == version_id)).scalars():
+        attrs = dict(row.attributes_json or {})
+        prov = dict(attrs.get("provenance") or {})
+        nodes[row.canonical_key] = {
+            ATTR_KEY: row.canonical_key,
+            ATTR_TYPE: row.entity_type,
+            ATTR_NAME: row.name,
+            ATTR_NORM: row.normalized_name or row.name.lower(),
+            ATTR_VERSION: version,
+            ATTR_CONFIDENCE: float(row.confidence),
+            ATTR_SOURCE: row.source,
+            "profile": row.profile,
+            "page": row.page,
+            "section": row.section,
+            "attributes": attrs,
+            # trusted provenance snapshot (task Part L): source document,
+            # section, pages, chunk — identical shape to the ABC nodes'
+            # provenance so UI/report code needs no special-casing.
+            ATTR_PROVENANCE: {
+                "document_name": prov.get("document_name", ""),
+                "version_label": prov.get("version_label", version),
+                "section_no": prov.get("section_no", row.section or ""),
+                "section_title": prov.get("section_title", ""),
+                "page_start": prov.get("page_start", row.page or 0),
+                "page_end": prov.get("page_end", row.page or 0),
+                "source_chunk_id": prov.get("source_chunk_id", ""),
+            },
+        }
+    return nodes
 
 
 def _typed_nodes(session: Session, version_id: int,
@@ -154,8 +195,9 @@ def build_graph(session: Session, version: str | None = None,
     g.graph["version"] = version_label
     g.graph["version_id"] = version_id
 
-    # 1. nodes from the typed registry tables
+    # 1. nodes from the typed registry tables (+ M9 extraction_entities)
     nodes = _typed_nodes(session, version_id, version_label)
+    nodes.update(_autosar_nodes(session, version_id, version_label))
     for key, attrs in nodes.items():
         g.add_node(key, **attrs)
 

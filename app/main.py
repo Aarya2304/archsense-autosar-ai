@@ -35,6 +35,9 @@ def _render(screen: str) -> None:
     if screen == state.DASHBOARD:
         from app.screens import dashboard
         dashboard.render()
+    elif screen == state.UPLOAD:
+        from app.screens import upload
+        upload.render()
     elif screen == state.WORKSPACE:
         from app.screens import document_workspace
         document_workspace.render()

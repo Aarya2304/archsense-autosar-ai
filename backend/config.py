@@ -32,6 +32,8 @@ SAMPLE_DOCS_DIR: Path = DATA_DIR / "sample_docs"    # generated HLD PDFs
 GENERATED_DIR: Path = DATA_DIR / "generated"        # dataset build artifacts
 GROUND_TRUTH_DIR: Path = DATA_DIR / "ground_truth"  # evaluation JSON
 PROCESSED_DIR: Path = DATA_DIR / "processed"        # ingestion page records (M1)
+UPLOADS_DIR: Path = DATA_DIR / "uploads"            # user uploads (M9)
+UPLOADS_PROCESSED_DIR: Path = UPLOADS_DIR / "processed"
 DB_DIR: Path = DATA_DIR / "db"
 DB_PATH: Path = DB_DIR / "archsense.db"
 VECTORS_DIR: Path = DATA_DIR / "vectors"            # ChromaDB (M2)
@@ -50,6 +52,8 @@ def ensure_runtime_dirs() -> None:
         GENERATED_DIR,
         GROUND_TRUTH_DIR,
         PROCESSED_DIR,
+        UPLOADS_DIR,
+        UPLOADS_PROCESSED_DIR,
         DB_DIR,
         VECTORS_DIR,
         GRAPHS_DIR,
@@ -73,9 +77,10 @@ def _env_bool(key: str, default: bool) -> bool:
 
 OPENROUTER_API_KEY: str = _env_str("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL: str = _env_str("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-OPENROUTER_MODEL: str = _env_str("OPENROUTER_MODEL", "google/gemma-3-27b-it:free")
+OPENROUTER_MODEL: str = _env_str(
+    "OPENROUTER_MODEL", "google/gemma-3-27b-it:free")  # noqa: E501
 
-OLLAMA_BASE_URL: str = _env_str("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_BASE_URL: str = _env_str("OLLAMA_BASE_URL", "http://localhost:11434")  # noqa: E501
 OLLAMA_MODEL: str = _env_str("OLLAMA_MODEL", "llama3.1:8b")
 
 LLM_TIMEOUT_SECONDS: int = int(_env_str("LLM_TIMEOUT_SECONDS", "90"))
@@ -131,6 +136,14 @@ EXTRACTION_MIN_CONFIDENCE: float = float(
     _env_str("EXTRACTION_MIN_CONFIDENCE", "0.5"))
 EXTRACTION_MAX_CHUNKS: int = int(_env_str("EXTRACTION_MAX_CHUNKS", "400"))
 EXTRACTION_LLM_PROVIDER: str = _env_str("EXTRACTION_LLM_PROVIDER", "mock")
+
+# --------------------------------------------------------- M9 knobs ----
+# User uploads: dedicated runtime area (data/uploads/**, git-ignored). The
+# MAIN corpus vector collection (data/vectors/chroma) is never touched by
+# the upload pipeline: uploaded documents index into their own Chroma
+# collection in the same persist directory (D-047).
+MAX_UPLOAD_MB: int = int(_env_str("MAX_UPLOAD_MB", "100"))
+UPLOAD_COLLECTION: str = _env_str("UPLOAD_COLLECTION", "uploads_chunks")
 
 # --------------------------------------------------------- governance ------
 AUDIT_LOG_ENABLED: bool = _env_bool("AUDIT_LOG_ENABLED", True)

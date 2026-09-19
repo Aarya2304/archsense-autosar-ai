@@ -16,6 +16,7 @@ from app import state
 
 SCREENS = [
     (state.DASHBOARD, "Dashboard"),
+    (state.UPLOAD, "Upload Documents"),
     (state.WORKSPACE, "Document Workspace"),
     (state.EXPLORER, "Architecture Explorer"),
     (state.COPILOT, "Copilot"),
@@ -28,6 +29,30 @@ SCREENS = [
 def esc(text) -> str:
     """HTML-escape untrusted text before embedding into generated HTML."""
     return html.escape(str(text))
+
+
+_PROFILE_BADGES = {
+    "application_hld": "🔵 ABC application HLD",
+    "autosar_adaptive_platform": "🟠 AUTOSAR Adaptive Platform",
+    "generic": "⚪ Generic (M1–M3 only)",
+}
+
+
+def profile_badge(profile: str) -> str:
+    """Short profile marker used on screens that list versions (M9)."""
+    return _PROFILE_BADGES.get(profile, profile)
+
+
+def fmt_version(label: str | None) -> str:
+    """Human display of a version label (M9).
+
+    Numeric labels get the ``v`` prefix (``1.1.0`` -> ``v1.1.0``);
+    non-numeric labels (``unversioned``, ``unversioned-2``, ``R20-11``) are
+    shown as-is — ``vunversioned`` would be nonsense.
+    """
+    if not label:
+        return "—"
+    return label if label[:1].isalpha() else f"v{label}"
 
 
 def fmt_provenance(document: str | None,
@@ -45,8 +70,7 @@ def fmt_provenance(document: str | None,
     if document:
         parts.append(str(document))
     if version:
-        v = str(version)
-        parts.append(v if v.startswith("v") else f"v{v}")
+        parts.append(fmt_version(str(version)))
     if section_no:
         sec = f"Section {section_no}"
         if section_title:

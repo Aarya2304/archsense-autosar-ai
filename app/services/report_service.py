@@ -74,6 +74,12 @@ def build_report(version: str | None = None,
     if version:
         summary = svc.get_document_summary(version, session=session)
         doc_info["selected"] = summary
+        # M9: profile of the reported version (honest availability marker).
+        try:
+            from app.services.m9_services import profile_of_version
+            doc_info["profile"] = profile_of_version(version, session=session)
+        except Exception:  # noqa: BLE001 - report must not fail on profile
+            doc_info["profile"] = "unknown"
     report["document_information"] = doc_info
 
     # 2-4. architecture ---------------------------------------------------

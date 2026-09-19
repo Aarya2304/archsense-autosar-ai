@@ -11,7 +11,8 @@ from __future__ import annotations
 import streamlit as st
 
 from app import state
-from app.services import ServiceError, ask_copilot, get_versions
+from app.components import profile_badge
+from app.services import ServiceError, get_versions_profiled
 
 _PROVIDERS = ["mock", "openrouter", "ollama"]
 _PROVIDER_HELP = {
@@ -23,7 +24,7 @@ _PROVIDER_HELP = {
 
 def render() -> None:
     try:
-        versions = [v for v in get_versions() if v["has_chunks"]]
+        versions = [v for v in get_versions_profiled() if v["has_chunks"]]
     except ServiceError as exc:
         st.error(f"Database unavailable: {exc}")
         return
@@ -40,6 +41,8 @@ def render() -> None:
     chosen = st.selectbox("Answer from", labels, index=idx)
     sel = versions[labels.index(chosen)]
     state.set_version(sel["version"])
+    st.caption(f"Corpus: {profile_badge(sel['profile'])} — answers cite only "
+               "evidence retrieved from the selected document/version.")
 
     qcols = st.columns([5, 2, 1.4])
     with qcols[0]:
@@ -69,7 +72,8 @@ def render() -> None:
             st.session_state.as_question = question
             with st.spinner("Retrieving evidence and generating answer…"):
                 try:
-                    st.session_state.as_last_answer = ask_copilot(
+                    ask = _ask_for(sel)
+                    st.session_state.as_last_answer = ask(
                         question.strip(), version=sel["version"],
                         top_k=int(top_k), provider=provider)
                 except ServiceError as exc:
@@ -80,6 +84,20 @@ def render() -> None:
                     st.error(f"Copilot failed: {exc}")
 
     _render_answer(st.session_state.as_last_answer)
+
+
+def _ask_for(sel: dict):
+    """Route the ask to the corpus matching the selected document (M9).
+
+    Uploaded documents live in the ISOLATED upload collection, so retrieval
+    goes through the upload-copilot adapter; the demo corpus keeps the M8
+    path. Same M3 pipeline, same citation validation.
+    """
+    if sel.get("is_upload"):
+        from app.services.m9_services import ask_copilot_for_document
+        return ask_copilot_for_document
+    from app.services import ask_copilot
+    return ask_copilot
 
 
 def _friendly_error(msg: str, provider: str) -> str:

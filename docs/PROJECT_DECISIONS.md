@@ -745,6 +745,74 @@ must filter both legs). This is a correctness fix, not a redesign: the M3
 API, RRF fusion and gate are unchanged, and all M3 tests pass. Verified:
 v1.1.0 answers cite only v1.1.0 evidence.
 
+## D-047 — M9 upload architecture: dedicated runtime store, isolated index (M9)
+
+User PDFs are stored under `data/uploads/` (gitignored; `.gitignore` gained
+an explicit `data/uploads/` rule because the `!data/` whitelist would
+otherwise re-include it), processed JSON under `data/uploads/processed/`,
+and indexed into a **dedicated upload Chroma collection**
+(`UPLOAD_COLLECTION`, default `uploads_chunks`) so `data/vectors/chroma/`
+and the external AUTOSAR regression index are never touched. Storage is
+content-addressed: SHA-256 per file, safe filename
+(`{digest8}_{sanitized}`), duplicate *content* is detected against the
+registered `Document.sha256` and reported (with a `--reset` escape hatch)
+instead of silently re-ingesting. Uploads are PDF-only, size-capped
+(`MAX_UPLOAD_MB`, default 100) and never executed.
+
+## D-048 — Profile detection is evidence-based, not name-based (M9)
+
+Each upload is classified into one of three profiles from *document
+evidence* (title metadata, section titles, table headers, repeated prose
+terminology, ID-shape conventions) — never from a single keyword hit:
+
+- `application_hld` — the synthetic ABC HLD schema (M4 taxonomy: C-/IF-/
+  P-/SG-/DEP-/FL- IDs, catalogue tables, "S-R/C-S interface" prose).
+- `autosar_adaptive_platform` — strong AUTOSAR Adaptive Platform
+  terminology across title + section structure (e.g. "Adaptive
+  Platform", "Functional Cluster", "ARA" recurring in section titles).
+- `generic` — everything else: M1/M2/M3 only; **no structured M4–M6
+  results are fabricated** for it. Zero findings is a valid result; a
+  wrong analysis is not.
+
+Detection is deterministic and unit-tested against the real ABC HLDs, the
+real R20-11 AUTOSAR document and a deliberately generic PDF.
+
+## D-049 — AUTOSAR schema: small ontology from real evidence (M9)
+
+The R20-11 document is NOT forced into the synthetic ABC entity schema. A
+small AUTOSAR-specific vocabulary (10 entity types, 10 predicates) was
+derived from verified prose of
+*AUTOSAR Explanation of Adaptive Platform Design, R20-11, Document ID 706*
+(`backend/extraction/autosar/`): `adaptive_application`, `ara`,
+`functional_cluster`, `platform_foundation`, `platform_service`,
+`service`, `interface`, `process`, `machine`, `manifest`,
+`software_package`; predicates `runs_on`, `provides_interface`,
+`uses_interface`, `provides_service`, `interacts_with`, `belongs_to`,
+`configured_by`, `implemented_as`, `commands`, `updates`. Extraction is
+deterministic (line-windowed sentence patterns, negation-aware, ToC
+pages excluded), every fact carries trusted `EvidenceRef` provenance
+(chunk → document/section/page) under the same D-022 rules as M4 — the
+LLM is never involved and can never invent page/section/chunk identity.
+Entities persist in the new generic `extraction_entities` table, facts in
+the existing `extraction_facts` table, so M5/M6/M7 consume AUTOSAR data
+through the exact same registry contracts as ABC data.
+
+## D-050 — Profile-aware analysis routing (M9)
+
+M5 graph building, M6 findings and M7 comparison are profile-aware:
+- M5 nodes now load both the M4 typed tables *and* generic
+  `extraction_entities` rows; graph validation accepts the union of
+  profile predicate domains.
+- M6 runs the ABC detector suite only for `application_hld`; AUTOSAR
+  versions get the conservative AUTOSAR set (`inconsistent_classification`,
+  `undefined_reference`) — ABC rules are never applied to AUTOSAR facts.
+- M7 comparison requires both versions to share one profile (enforced in
+  the service gate and the UI); cross-profile comparisons are refused
+  with an actionable message.
+- An upload without a detected version gets a unique
+  `unversioned-{digest8}` label, because version labels are only unique
+  per document while M0–M8 services resolve versions by label.
+
 ## Open items / pending decisions
 
 - **M7 diff:** edge identity = `fact_key` (D-027) makes the v1→v2 edge
@@ -766,6 +834,11 @@ v1.1.0 answers cite only v1.1.0 evidence.
   `VehicleModeMgrSW C` (stray space from PDF text extraction); identity,
   keys and diffs are unaffected. A registry-side whitespace-normalization
   pass could clean it without touching M0/M1.
+- **AUTOSAR gold standard:** none exists for the R20-11 document, so M9
+  reports extraction coverage and hand-verified spot checks (e.g. ARA
+  section 3.1.1, pp. 15–16) — not precision/recall. The ontology is
+  intentionally small and explanatory-document-scoped; it does not claim
+  general AUTOSAR understanding.
 - **pyvis 0.3.2 template hygiene:** its HTML template hardcodes two dead
   resource blocks (commented node_modules/vis pair, cosmetic bootstrap CDN
   tags); `render_html` strips them deterministically so exports are fully

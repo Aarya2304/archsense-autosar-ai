@@ -37,6 +37,7 @@ findings, and revision impact out. Human review stays in the loop.
 | M6 | Deterministic architecture findings + analysis CLI | ✅ complete |
 | M7 | Revision compare + impact analysis (deterministic diff) | ✅ complete |
 | M8 | Final Streamlit application | ✅ complete |
+| M9 | Real AUTOSAR Adaptive Platform support + user PDF upload | ✅ complete |
 
 See `docs/IMPLEMENTATION_STATUS.md` for detail and
 `docs/PROJECT_DECISIONS.md` for every major design decision.
@@ -57,7 +58,9 @@ python -m venv .venv
 .venv/Scripts/python scripts/evaluate_revisions.py        # diff P/R/F1 vs ground truth
 .venv/Scripts/python -m streamlit run app/main.py         # launch the app (M8)
 .venv/Scripts/python scripts/verify_app_screens.py        # 61-check screen battery
-.venv/Scripts/python -m pytest tests/                     # 435 tests
+.venv/Scripts/python scripts/ingest_upload.py \
+    data/external_test/AUTOSAR_EXP_PlatformDesign.pdf     # upload pipeline (M9)
+.venv/Scripts/python -m pytest tests/                     # 481 tests
 ```
 
 ### Ask the copilot (M3, offline by default)
@@ -368,6 +371,33 @@ MultiDiGraph
     ▼ GraphService (service.py) ── the typed facade for CLI/M6/M7/M8
 ```
 
+## M9 — real AUTOSAR Adaptive Platform support + user uploads
+
+ArchSense is no longer limited to the synthetic ABC HLDs:
+
+- **Upload workflow** — the app's **Upload Documents** screen (and
+  `scripts/ingest_upload.py` CLI) accepts PDFs, shows metadata, and runs
+  the full pipeline only on an explicit **Process** action: safe storage
+  (`data/uploads/`, SHA-256, content-dedupe) → M1 ingestion → M2 indexing
+  into an **isolated upload Chroma collection** (main and external-test
+  indexes untouched, D-047) → evidence-based profile detection (D-048)
+  → structured extraction when the profile supports it.
+- **Profiles** — `application_hld` (synthetic ABC schema, full M4–M7),
+  `autosar_adaptive_platform` (dedicated schema, D-049), `generic`
+  (M1–M3 only; no fabricated graph/findings).
+- **Real AUTOSAR validation** — against *AUTOSAR Explanation of Adaptive
+  Platform Design, R20-11, Document ID 706*: **34 entities, 77 facts,
+  77/77 facts with trusted page/section provenance, 0 validation errors**
+  (hand-verified spot checks incl. section 3.1.1 ARA, pp. 15–16; no gold
+  standard exists, so no precision/recall is claimed). The AUTOSAR graph
+  builds through the standard M5 `GraphService` and passes validation;
+  findings run the conservative AUTOSAR detector set (0 findings is a
+  valid, honest result); revision compare requires a second compatible
+  AUTOSAR revision and is refused otherwise (D-050).
+- **Generic PDFs stay safe** — a non-recognized PDF is ingested, indexed
+  and copilot-answerable, and the UI clearly states structured analysis
+  is unavailable instead of showing fake entities/findings.
+
 ## Repository layout
 
 ```
@@ -389,20 +419,26 @@ backend/
                  CompareRun persistence, evaluation
   storage/       SQLite schema, sessions, audit log
   services/      application layer (UI-agnostic business logic)
+  uploads/       M9: safe upload storage, profile detection, upload
+                 pipeline (M1 -> M2 -> profile -> structured extraction)
+  extraction/    M4: deterministic ABC extraction + registry; autosar/
+                 M9: AUTOSAR Adaptive Platform schema + extractor
 app/             Streamlit UI (M8): main router, state, components,
                  services/ (thin adapters over M1-M7 + report assembly),
                  screens/ (Dashboard, Document Workspace, Architecture
-                 Explorer, Copilot, Findings, Revision Compare, Export)
+                 Explorer, Copilot, Findings, Revision Compare, Export,
+                 Upload Documents)
 scripts/         dataset generation, ingestion, indexing, evaluation,
                  copilot CLI, gate calibration, extraction + registry CLIs,
                  graph explorer + graph evaluation,
                  findings analysis + findings evaluation,
                  revision compare + revision evaluation,
-                 app screen verification battery (verify_app_screens.py)
-tests/           pytest suite (435 tests green at M8; opt-in model tests)
+                 app screen verification battery (verify_app_screens.py),
+                 upload ingestion CLI (ingest_upload.py)
+tests/           pytest suite (481 tests green at M9; opt-in model tests)
 docs/            decisions, status, architecture, evaluation, demo script
 data/            generated artifacts (gitignored: processed/, vectors/,
-                 evaluation/, db/, graphs/, exports/)
+                 evaluation/, db/, graphs/, exports/, uploads/)
 ```
 
 ## Governance principles (from the case study)

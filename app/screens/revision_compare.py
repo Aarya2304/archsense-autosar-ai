@@ -10,13 +10,14 @@ from __future__ import annotations
 import streamlit as st
 
 from app import state
-from app.components import fmt_provenance
-from app.services import (ServiceError, compare_revisions, get_versions)
+from app.components import fmt_provenance, profile_badge
+from app.services import (ServiceError, compare_revisions_gated,
+                          get_versions_profiled)
 
 
 def render() -> None:
     try:
-        versions = [v for v in get_versions() if v["has_registry"]]
+        versions = [v for v in get_versions_profiled() if v["has_registry"]]
     except ServiceError as exc:
         st.error(f"Database unavailable: {exc}")
         return
@@ -28,6 +29,13 @@ def render() -> None:
 
     labels = [f"{v['document_name']} — v{v['version']}" for v in versions]
     vlabels = [v["version"] for v in versions]
+    profiles = {v["version"]: v["profile"] for v in versions}
+
+    # M9 honesty (Part K/N): comparison is only offered between versions of
+    # the same structured profile; the gate below enforces it deterministically.
+    st.caption("Comparisons run only between two versions of the same "
+               "structured profile (e.g. two revisions of the ABC HLD). "
+               "Unrelated or generic documents are never compared.")
 
     cc = st.columns([2, 2, 1, 1.6])
     with cc[0]:
@@ -57,11 +65,17 @@ def render() -> None:
     if base == tgt:
         st.warning("Base and target versions must differ.")
         return
+    if profiles.get(base) != profiles.get(target):
+        st.warning(
+            f"Profiles differ: {profile_badge(profiles.get(base, 'generic'))} "
+            f"vs {profile_badge(profiles.get(target, 'generic'))}. Comparison "
+            "requires two revisions of the same logical project/schema.")
+        return
 
     if st.button("Compare revisions", type="primary", key="rc_run"):
         with st.spinner("Comparing revisions…"):
             try:
-                st.session_state.as_last_comparison = compare_revisions(
+                st.session_state.as_last_comparison = compare_revisions_gated(
                     base, tgt, depth=int(depth), persist=persist)
             except ServiceError as exc:
                 st.session_state.as_last_comparison = None

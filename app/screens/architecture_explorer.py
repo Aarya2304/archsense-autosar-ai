@@ -11,9 +11,10 @@ from __future__ import annotations
 import streamlit as st
 
 from app import state
-from app.components import fmt_provenance
+from app.components import fmt_provenance, profile_badge
 from app.services import (ServiceError, get_architecture_graph,
-                          get_entity_detail, get_versions, search_entities)
+                          get_entity_detail, get_versions_profiled,
+                          search_entities)
 
 _TYPE_COLORS = {
     "component": "#4C78A8",
@@ -22,6 +23,14 @@ _TYPE_COLORS = {
     "signal": "#E45756",
     "dependency": "#72B7B2",
     "functional_flow": "#B279A2",
+    # M9 AUTOSAR Adaptive Platform node types
+    "adaptive_application": "#4C78A8",
+    "functional_cluster": "#F58518",
+    "ara": "#72B7B2",
+    "platform_foundation": "#9D755D",
+    "platform_service": "#E45756",
+    "service_interface": "#54A24B",
+    "manifest": "#B279A2",
 }
 _PRED_COLORS = {
     "provides": "#4C78A8",
@@ -51,7 +60,7 @@ def _filtered_graph(graph, entity_type: str | None, predicate: str | None,
 
 def render() -> None:
     try:
-        versions = [v for v in get_versions() if v["has_registry"]]
+        versions = [v for v in get_versions_profiled() if v["has_registry"]]
     except ServiceError as exc:
         st.error(f"Database unavailable: {exc}")
         return
@@ -68,6 +77,8 @@ def render() -> None:
     chosen = st.selectbox("Version", labels, index=idx)
     sel = versions[labels.index(chosen)]
     state.set_version(sel["version"])
+    st.caption(f"Schema: {profile_badge(sel['profile'])} — node and edge "
+               "types come from the profile's structured registry.")
 
     try:
         graph, stats = get_architecture_graph(sel["version"])

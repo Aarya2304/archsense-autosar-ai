@@ -418,6 +418,44 @@ class CompareRun(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
 
+class ExtractionEntity(Base):
+    """Profile-generic entity registry (M9).
+
+    The six typed ABC tables (components/interfaces/...) stay canonical for
+    the application_hld profile; profile-specific vocabularies (AUTOSAR
+    Adaptive Platform) persist here as typed JSON rows so the M5 graph
+    builder and M6 findings can consume BOTH vocabularies through one
+    uniform surface without loosening the ABC domain/range model.
+
+    ``canonical_key`` includes the profile namespace ("autosar:fc:em");
+    identity is (version_id, canonical_key).
+    """
+
+    __tablename__ = "extraction_entities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    version_id: Mapped[int] = mapped_column(ForeignKey("document_versions.id"))
+    canonical_key: Mapped[str] = mapped_column(String(200))
+    entity_type: Mapped[str] = mapped_column(String(60))
+    name: Mapped[str] = mapped_column(String(255))
+    normalized_name: Mapped[str] = mapped_column(String(255), default="")
+    attributes_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    profile: Mapped[str] = mapped_column(String(50), default="")
+    page: Mapped[int] = mapped_column(Integer, default=0)
+    section: Mapped[str] = mapped_column(String(64), default="")
+    source: Mapped[str] = mapped_column(String(20), default="deterministic")
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    status: Mapped[str] = mapped_column(Enum(EntityStatus),
+                                        default=EntityStatus.PENDING)
+
+    __table_args__ = (
+        UniqueConstraint("version_id", "canonical_key",
+                         name="uq_ext_entity_per_version"),
+        Index("ix_ext_entities_version", "version_id"),
+        Index("ix_ext_entities_type", "version_id", "entity_type"),
+    )
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 

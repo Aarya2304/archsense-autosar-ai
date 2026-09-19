@@ -10,14 +10,15 @@ from __future__ import annotations
 import streamlit as st
 
 from app import state
-from app.services import (ServiceError, get_versions,
+from app.components import profile_badge
+from app.services import (ServiceError, get_versions_profiled,
                           report_changes_to_csv, report_findings_to_csv,
                           report_impacts_to_csv, report_to_json)
 
 
 def render() -> None:
     try:
-        versions = get_versions()
+        versions = get_versions_profiled()
     except ServiceError as exc:
         st.error(f"Database unavailable: {exc}")
         return
@@ -27,12 +28,15 @@ def render() -> None:
         return
 
     reg_versions = [v["version"] for v in versions if v["has_registry"]]
-    labels = [f"{v['document_name']} — v{v['version']}" for v in versions]
+    labels = [f"{v['document_name']} — v{v['version']} "
+              f"[{profile_badge(v['profile'])}]" for v in versions]
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        version = st.selectbox("Primary version", labels)
-        version = versions[labels.index(version)]["version"]
+        chosen = st.selectbox("Primary version", labels)
+        sel = versions[labels.index(chosen)]
+        version = sel["version"]
+        st.caption(f"Profile: {profile_badge(sel['profile'])}")
     with c2:
         base = st.selectbox(
             "Comparison base (optional)", ["(none)"] + reg_versions,
@@ -71,7 +75,7 @@ def render() -> None:
         return
 
     sel = report.get("selections", {})
-    st.success(f"Report generated for v{sel.get('version')}"
+    st.success(f"Report generated for {sel.get('version')}"
                + (f" ({sel.get('base_version')} → "
                   f"{sel.get('target_version')})" if sel.get("base_version")
                   else "") + ".")

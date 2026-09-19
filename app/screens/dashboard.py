@@ -9,9 +9,9 @@ from __future__ import annotations
 import streamlit as st
 
 from app import state
-from app.components import SCREENS
+from app.components import SCREENS, profile_badge
 from app.services import (ServiceError, get_architecture_stats,
-                          get_findings_from_db, get_versions)
+                          get_findings_from_db, get_versions_profiled)
 
 
 def _action_card(label: str, description: str, screen: str, key: str) -> None:
@@ -29,7 +29,7 @@ def render() -> None:
     )
 
     try:
-        versions = get_versions()
+        versions = get_versions_profiled()
     except ServiceError as exc:
         st.error(f"Database unavailable: {exc}")
         return
@@ -49,6 +49,10 @@ def render() -> None:
         "Workspace (document / version)", labels, index=idx)
     sel = versions[labels.index(chosen)]
     state.set_version(sel["version"])
+
+    st.caption(f"Profile: {profile_badge(sel['profile'])} · "
+               + ("structured analysis available" if sel["structured"]
+                  and sel["has_registry"] else "M1–M3 retrieval only"))
 
     st.divider()
 
@@ -77,16 +81,21 @@ def render() -> None:
     if not sel["has_registry"]:
         flags.append("no structured extraction (M4) — Explorer / Findings / "
                      "Compare unavailable for this version")
+    if sel["profile"] == "generic":
+        flags.append("generic profile — structured analysis is intentionally "
+                     "unavailable; Copilot retrieval is fully supported")
     for f in flags:
         st.caption(f"⚠ {f}")
 
     st.subheader("Open a screen")
-    rows = [SCREENS[i:i + 3] for i in range(1, len(SCREENS), 3)]
+    rows = [SCREENS[i:i + 3] for i in range(0, len(SCREENS), 3)]
     for r_i, row in enumerate(rows):
         cols = st.columns(3)
         for c_i, (screen_id, label) in enumerate(row):
             with cols[c_i]:
                 descriptions = {
+                    state.UPLOAD: "Upload and process new PDF documents "
+                                  "(explicit, profile-aware pipeline).",
                     state.WORKSPACE: "Browse pages, sections and chunk text "
                                      "of the selected document.",
                     state.EXPLORER: "Interactive architecture graph with "
@@ -106,6 +115,7 @@ def render() -> None:
     st.divider()
     st.caption(
         "Data sources: SQLite registry (M1/M4/M6/M7), ChromaDB index (M2/M3), "
-        "NetworkX graph (M5). The external AUTOSAR sample document (if "
-        "ingested) has full-text retrieval only — structured architecture "
-        "analysis requires M4 extraction, which has not been run for it.")
+        "NetworkX graph (M5). Structured architecture analysis is profile-"
+        "aware: the synthetic ABC application HLD and the AUTOSAR Adaptive "
+        "Platform profile both support M4–M7, generic documents are served "
+        "by Copilot retrieval (M1–M3) only — nothing is fabricated.")
