@@ -1,204 +1,926 @@
 # ArchSense — AUTOSAR HLD Document Analysis Assistant
 
-**AI-assisted architecture intelligence for automotive HLD documents.**
-From unstructured HLDs to a cited, validated architecture knowledge base —
-documents in, structured architecture knowledge, cited Q&A, consistency
-findings, and revision impact out. Human review stays in the loop.
+> **AI-assisted architecture intelligence for automotive High-Level Design documents.**
 
-> Tata Pulse / Tata Technologies Case Study 1 pilot · fully synthetic demo
-> corpus · work in progress toward the 2026-09-26 milestone.
+**Status: Completed — Tata Pulse / Tata Technologies Case Study 1 Pilot**
 
-## What it does (approved MVP scope)
+ArchSense is an engineering analysis tool that transforms unstructured AUTOSAR-style High-Level Design (HLD) documents into a traceable architecture knowledge base.
 
-1. **Ingest** AUTOSAR-style HLD PDFs page-aware: text, tables, headings,
-   metadata (OCR fallback hook for scanned pages).
-2. **Index** content into a local vector DB (ChromaDB) with section/page
-   metadata for citation-accurate retrieval.
-3. **Answer** engineering questions with strict, mechanically validated
-   citations — and explicit refusal when evidence is insufficient.
-4. **Extract** structured architecture knowledge (components, interfaces,
-   ports, signals, dependencies, flows) via a deterministic + LLM hybrid.
-5. **Visualize** the architecture graph with citations on relationships.
-6. **Analyze** consistency/completeness with deterministic + LLM-assisted
-   checks; findings go through human review (accept/reject/needs-discussion).
-7. **Compare** HLD revisions (added/removed/modified + impact).
-8. **Export** structured reports (JSON/CSV/Markdown) with audit trail.
+It provides:
 
-## Status
+- Page-aware document ingestion
+- Hybrid lexical + semantic retrieval
+- Citation-grounded question answering
+- Structured architecture extraction
+- Architecture graph exploration
+- Deterministic consistency findings
+- Revision comparison and impact analysis
+- AUTOSAR Adaptive Platform support
+- Exportable engineering reports
+- Human-review-oriented workflows
 
-| Milestone | Scope | Status |
-|---|---|---|
-| M0 | Synthetic dataset + ground truth | ✅ complete |
-| M1 | Page-aware PDF ingestion | ✅ complete |
-| M2 | Chunking, embedding benchmark, ChromaDB, retrieval + eval | ✅ complete |
-| M3 | Hybrid retrieval + cited RAG copilot + refusal gate | ✅ complete |
-| M4 | Structured extraction + SQLite registry + evaluation | ✅ complete |
-| M5 | Architecture Graph Explorer (NetworkX + pyvis) | ✅ complete |
-| M6 | Deterministic architecture findings + analysis CLI | ✅ complete |
-| M7 | Revision compare + impact analysis (deterministic diff) | ✅ complete |
-| M8 | Final Streamlit application | ✅ complete |
-| M9 | Real AUTOSAR Adaptive Platform support + user PDF upload | ✅ complete |
+The system is designed so that the LLM assists with language understanding while document metadata, provenance, citations, architecture relationships, and deterministic findings remain grounded in the source documents.
 
-See `docs/IMPLEMENTATION_STATUS.md` for detail and
-`docs/PROJECT_DECISIONS.md` for every major design decision.
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Problem](#problem)
+- [Solution](#solution)
+- [Key Capabilities](#key-capabilities)
+- [Architecture](#architecture)
+- [Application](#application)
+- [Technology Stack](#technology-stack)
+- [Quickstart](#quickstart)
+- [End-to-End Workflow](#end-to-end-workflow)
+- [AI / RAG Design](#ai--rag-design)
+- [AUTOSAR Adaptive Platform Support](#autosar-adaptive-platform-support)
+- [Results and Evaluation](#results-and-evaluation)
+- [Synthetic vs. Real Validation](#synthetic-vs-real-validation)
+- [Testing](#testing)
+- [Development and Evaluation Commands](#development-and-evaluation-commands)
+- [Technical Milestones](#technical-milestones)
+- [Repository Structure](#repository-structure)
+- [Governance and Responsible AI](#governance-and-responsible-ai)
+- [Limitations](#limitations)
+- [License and Data Notice](#license-and-data-notice)
+
+---
+
+## Overview
+
+AUTOSAR HLD documents contain architecture information across prose, tables, section structures, interfaces, ports, signals, dependencies, functional flows, and revision changes.
+
+ArchSense converts this information into a searchable and traceable engineering workspace.
+
+The system combines deterministic document processing with optional LLM assistance:
+
+```text
+                    ┌─────────────────────┐
+                    │      HLD PDF        │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │ Page-aware Ingestion│
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+                    ▼                     ▼
+             Retrieval / RAG       Structured Extraction
+                    │                     │
+                    ▼                     ▼
+             Evidence Gate         SQLite Registry
+                    │                     │
+                    ▼                     ▼
+             Cited Copilot          Architecture Graph
+                                          │
+                              ┌───────────┴───────────┐
+                              ▼                       ▼
+                         Findings             Revision Analysis
+                              │                       │
+                              └───────────┬───────────┘
+                                          ▼
+                                  Streamlit Application
+                                          │
+                                          ▼
+                                  JSON / CSV Reports
+````
+
+The project supports both a controlled synthetic HLD corpus for quantitative evaluation and a real AUTOSAR Adaptive Platform document for validation.
+
+---
+
+## Problem
+
+AUTOSAR-style HLD documents describe system architecture through a combination of:
+
+* Prose and technical narrative
+* Catalogue and configuration tables
+* Section structures
+* Components and interfaces
+* Ports and signals
+* Dependencies
+* Functional flows
+* Multiple document revisions
+
+The information required to answer a single engineering question can therefore be distributed across many pages.
+
+Manual analysis makes it difficult to:
+
+* Find relevant evidence quickly and identify its exact page
+* Trace an answer or engineering claim back to the source
+* Understand relationships between architecture elements
+* Detect consistency and completeness issues
+* Compare architecture revisions
+* Determine which elements may be affected by a change
+
+ArchSense addresses these problems by preserving document provenance throughout the analysis pipeline.
+
+---
+
+## Solution
+
+ArchSense provides two complementary analysis paths.
+
+### Retrieval and Q&A
+
+```text
+PDF
+ │
+ ▼
+Page-aware ingestion
+ │
+ ▼
+Section-aware chunking
+ │
+ ▼
+BM25 + dense retrieval
+ │
+ ▼
+Reciprocal Rank Fusion
+ │
+ ▼
+Evidence gate
+ │
+ ▼
+Grounded evidence
+ │
+ ▼
+Cited Q&A
+```
+
+### Structured architecture analysis
+
+```text
+PDF
+ │
+ ▼
+Page-aware ingestion
+ │
+ ▼
+Structured extraction
+ │
+ ▼
+SQLite architecture registry
+ │
+ ▼
+Architecture graph
+ │
+ ├──► Consistency findings
+ │
+ └──► Revision / impact analysis
+ │
+ ▼
+Exportable reports
+```
+
+Structured extraction and downstream architecture analysis are available for supported document profiles. Generic PDFs can still be ingested, indexed, and queried, but the system does not fabricate structured architecture entities or findings when a document profile is unsupported.
+
+---
+
+## Key Capabilities
+
+### Document Intelligence
+
+* Page-aware PDF ingestion
+* Text, table, heading, and metadata extraction
+* Section mapping
+* Per-line provenance
+* OCR fallback hook for scanned pages
+* Safe document upload and content deduplication
+
+### Retrieval and RAG
+
+* BM25 lexical retrieval
+* Dense embedding retrieval
+* Reciprocal Rank Fusion (RRF)
+* Section-aware chunking
+* Evidence/refusal gate
+* Citation-grounded Q&A
+* Mechanically validated evidence IDs
+* Mechanical quote extraction
+
+### Structured Architecture Knowledge
+
+* Deterministic architecture extraction
+* Optional LLM-assisted extraction
+* Typed architecture entities
+* Relationships and facts
+* Confidence values
+* Source provenance
+* SQLite registry
+* Append-only audit trail
+
+### Architecture Graph
+
+* Version-scoped NetworkX graph
+* Entity and relationship filtering
+* Relationship provenance
+* Entity search
+* Graph paths and neighborhood exploration
+* PyVis visualization
+* JSON and GraphML export
+
+### Architecture Analysis
+
+* Undefined-reference detection
+* Dangling-requirement detection
+* Duplicate-interface detection
+* Conflicting-provider detection
+* Orphan-entity detection
+* Unconsumed-signal detection
+* Revision comparison
+* Relationship change analysis
+* Graph-based potential impact analysis
+
+### AUTOSAR Support
+
+* AUTOSAR Adaptive Platform profile
+* Evidence-based document profile detection
+* AUTOSAR-specific schema and extraction
+* Real AUTOSAR document validation
+* User PDF upload workflow
+
+### Reporting
+
+* Deterministic JSON reports
+* Findings CSV
+* Revision changes CSV
+* Impact analysis CSV
+* Architecture graph exports
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[HLD PDF] --> B[Page-aware Ingestion]
+    U[Uploaded PDF] --> B
+
+    B --> C[Chunking & Metadata]
+
+    C --> D[Hybrid Retrieval]
+    D --> E[Evidence Gate]
+    E --> F[Cited Copilot]
+
+    C --> G[Profile Detection]
+    G --> H[Structured Extraction]
+    H --> I[SQLite Architecture Registry]
+    I --> J[Architecture Graph]
+
+    J --> K[Consistency Findings]
+    I --> L[Revision & Impact Analysis]
+
+    F --> M[Streamlit Application]
+    J --> M
+    K --> M
+    L --> M
+
+    M --> N[JSON / CSV Reports]
+```
+
+The system is designed around a core principle:
+
+> **The LLM assists with interpretation, but it is not the source of truth for document metadata, citations, architecture identity, or deterministic findings.**
+
+---
+
+## Application
+
+ArchSense is implemented as a Streamlit engineering workspace.
+
+The application contains eight screens:
+
+| Screen                    | Purpose                                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Dashboard**             | Document/version statistics including pages, chunks, entities, facts, and findings, with navigation to the application workspace. |
+| **Document Workspace**    | Page preview, section map, indexed chunk text, document metadata, and page-level provenance.                                      |
+| **Architecture Explorer** | Interactive architecture graph with entity, predicate, confidence, and relationship exploration.                                  |
+| **Copilot**               | Grounded Q&A with evidence citations and selectable LLM providers.                                                                |
+| **Findings**              | Architecture findings, severity/type/status summaries, provenance, and analysis results.                                          |
+| **Revision Compare**      | Comparison of two compatible document versions with change and potential-impact analysis.                                         |
+| **Export & Report**       | Deterministic JSON report and findings/changes/impacts CSV downloads.                                                             |
+| **Upload Documents**      | User PDF upload, ingestion, indexing, profile detection, and supported-profile structured analysis.                               |
+
+The application maintains shared workspace state across the major analysis screens so that the selected document and version remain consistent throughout the workflow.
+
+---
+
+## Technology Stack
+
+| Layer                        | Technology                                     |
+| ---------------------------- | ---------------------------------------------- |
+| Language                     | Python 3.11                                    |
+| User Interface               | Streamlit                                      |
+| PDF Processing               | PyMuPDF, pdfplumber                            |
+| Synthetic Dataset Generation | ReportLab                                      |
+| Vector Store                 | ChromaDB                                       |
+| Embeddings                   | sentence-transformers                          |
+| Lexical Retrieval            | BM25                                           |
+| Retrieval Fusion             | Reciprocal Rank Fusion                         |
+| LLM Providers                | OpenRouter, Ollama, deterministic offline mock |
+| Graph                        | NetworkX, PyVis                                |
+| Structured Storage           | SQLite, SQLAlchemy                             |
+| Data Validation              | Pydantic                                       |
+| Visualization / Tables       | Plotly, pandas through Streamlit               |
+| Testing                      | pytest, Streamlit AppTest                      |
+
+The default workflow can run locally without an external LLM provider. OpenRouter or Ollama can be selected when LLM-assisted functionality is required.
+
+---
 
 ## Quickstart
 
+### 1. Create a virtual environment
+
 ```bash
 python -m venv .venv
-.venv/Scripts/python -m pip install -r requirements.txt   # Windows
-.venv/Scripts/python scripts/generate_dataset.py          # build synthetic HLDs + ground truth
-.venv/Scripts/python scripts/process_sample_docs.py       # ingest them (M1)
-.venv/Scripts/python scripts/build_vector_index.py        # chunks -> embeddings -> ChromaDB (M2)
-.venv/Scripts/python scripts/evaluate_retrieval.py        # page_hit@K / MRR vs ground truth
-.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0      # deterministic findings (M6)
-.venv/Scripts/python scripts/evaluate_findings.py                     # findings P/R/F1 vs planted defects
-.venv/Scripts/python scripts/compare_revisions.py \
-    --base-version 1.0.0 --target-version 1.1.0           # revision diff + impact (M7)
-.venv/Scripts/python scripts/evaluate_revisions.py        # diff P/R/F1 vs ground truth
-.venv/Scripts/python -m streamlit run app/main.py         # launch the app (M8)
-.venv/Scripts/python scripts/verify_app_screens.py        # 61-check screen battery
-.venv/Scripts/python scripts/ingest_upload.py \
-    data/external_test/AUTOSAR_EXP_PlatformDesign.pdf     # upload pipeline (M9)
-.venv/Scripts/python -m pytest tests/                     # 481 tests
 ```
 
-### Ask the copilot (M3, offline by default)
+### 2. Install dependencies
+
+#### Windows
+
+```bash
+.venv/Scripts/python -m pip install -r requirements.txt
+```
+
+#### macOS / Linux
+
+```bash
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+### 3. Launch the application
+
+#### Windows
+
+```bash
+.venv/Scripts/python -m streamlit run app/main.py
+```
+
+#### macOS / Linux
+
+```bash
+.venv/bin/python -m streamlit run app/main.py
+```
+
+The application is available at:
+
+```text
+http://localhost:8501
+```
+
+The repository contains the synthetic demonstration corpus, ground truth, and real AUTOSAR validation document used by the project.
+
+Generated runtime artifacts such as processed documents, vector indexes, databases, evaluation outputs, graphs, and exports are stored under `data/` paths and are excluded from version control.
+
+---
+
+## End-to-End Workflow
+
+### 1. Document ingestion
+
+The ingestion pipeline extracts:
+
+* Text
+* Tables
+* Headings
+* Section structure
+* Metadata
+* Page-level provenance
+
+Processed documents retain the relationship between extracted information and its source document page.
+
+An OCR fallback hook is available for scanned pages.
+
+### 2. Retrieval
+
+Documents are divided into deterministic, section-aware chunks.
+
+Prose is grouped into context-preserving chunks, while tables are represented as standalone linearized chunks with provenance.
+
+Chunks are indexed using:
+
+* Dense embeddings
+* BM25 lexical retrieval
+
+The two retrieval strategies are combined through Reciprocal Rank Fusion.
+
+### 3. Evidence gate
+
+Before an LLM is called, a deterministic evidence gate checks whether the question has sufficient support in the indexed corpus.
+
+The gate considers:
+
+* Lexical evidence
+* Query terminology coverage
+* Retrieval agreement
+
+Questions without sufficient evidence receive:
+
+```text
+INSUFFICIENT EVIDENCE
+```
+
+instead of being sent to the model for unsupported generation.
+
+### 4. Copilot
+
+Grounded evidence blocks are passed to the selected LLM provider together with response rules.
+
+The model returns structured information containing:
+
+* Answer
+* Evidence IDs
+* Insufficient-evidence status
+
+Evidence IDs are resolved against trusted document metadata.
+
+Unknown or fabricated evidence IDs fail validation.
+
+Quotes are extracted mechanically from the source chunks rather than generated by the LLM.
+
+### 5. Structured extraction
+
+Supported document profiles can be converted into structured architecture knowledge.
+
+The extraction pipeline combines:
+
+* Deterministic table handlers
+* Prose patterns
+* Optional LLM-assisted extraction
+
+Extracted entities and facts undergo mechanical validation before being persisted.
+
+Validation includes:
+
+* Evidence resolution
+* Reference existence
+* Domain/range checks
+* Confidence thresholds
+* Deterministic deduplication
+
+### 6. Architecture registry
+
+Validated architecture information is stored in SQLite.
+
+The registry contains typed entities, facts, relationships, confidence values, provenance, analysis runs, and audit information.
+
+Architecture facts remain traceable through:
+
+```text
+Fact
+ ↓
+Chunk
+ ↓
+Document
+ ↓
+Version
+ ↓
+Section
+ ↓
+Page
+```
+
+### 7. Architecture graph
+
+The graph is derived from the structured registry rather than independently authored.
+
+Nodes represent architecture entities.
+
+Edges represent validated architecture facts.
+
+Graphs are version-scoped and preserve relationship provenance.
+
+### 8. Findings
+
+Architecture findings are generated by deterministic rule-based detectors.
+
+Examples include:
+
+* Undefined references
+* Dangling requirements
+* Duplicate interfaces
+* Conflicting providers
+* Orphan entities
+* Unconsumed signals
+
+Findings include deterministic identifiers and trusted provenance.
+
+### 9. Revision comparison
+
+Two compatible document versions can be compared using:
+
+* Canonical entity keys
+* Fact/relationship identity
+* Graph traversal
+
+The system reports:
+
+* Added entities
+* Removed entities
+* Changed entities
+* Added relationships
+* Removed relationships
+* Potentially impacted elements
+
+Impact analysis is explicitly reported as potential impact rather than guaranteed impact.
+
+### 10. User uploads
+
+Uploaded PDFs are:
+
+1. Stored safely
+2. Deduplicated using SHA-256
+3. Processed through page-aware ingestion
+4. Indexed into an isolated vector collection
+5. Classified using evidence-based profile detection
+6. Routed to structured extraction when the profile is supported
+
+The main and external-test vector indexes are kept separate from user-uploaded content.
+
+---
+
+## AI / RAG Design
+
+A central design principle of ArchSense is that the LLM should operate **inside a trusted evidence boundary**.
+
+```text
+BM25 + Dense Retrieval
+          │
+          ▼
+   RRF Fusion (k=60)
+          │
+          ▼
+   Evidence Gate
+   ──────────────
+   Mechanical
+   Pre-LLM check
+          │
+          ▼
+ Grounded Evidence
+ [E1 ... En]
+          │
+          ▼
+       LLM
+          │
+          ▼
+Structured JSON
+{answer, evidence_ids,
+ insufficient_evidence}
+          │
+          ▼
+Citation Validation
+```
+
+### Evidence grounding
+
+The LLM does not generate:
+
+* Document IDs
+* Version IDs
+* Section numbers
+* Page numbers
+* Chunk IDs
+
+These values come from trusted indexed document metadata.
+
+### Citation validation
+
+Every evidence reference generated by the model is resolved against the trusted evidence map.
+
+Unknown evidence IDs are rejected.
+
+### Quote extraction
+
+Quoted text is extracted from the cited document chunks rather than generated by the model.
+
+### Insufficient evidence
+
+If the retrieval evidence does not support a question, the system can refuse before the LLM is called.
+
+The model also has a structured insufficient-evidence state that provides a second layer of protection.
+
+---
+
+## AUTOSAR Adaptive Platform Support
+
+The completed M9 scope extends the original synthetic HLD workflow to real AUTOSAR Adaptive Platform documentation.
+
+### Supported profiles
+
+| Profile                     | Scope                                                  |
+| --------------------------- | ------------------------------------------------------ |
+| `application_hld`           | Synthetic ABC HLD schema with full structured analysis |
+| `autosar_adaptive_platform` | Dedicated AUTOSAR Adaptive Platform schema             |
+| `generic`                   | Ingestion, retrieval, and grounded Q&A only            |
+
+Profile detection uses document evidence including:
+
+* Title
+* Section structure
+* Domain terminology
+
+A single keyword is not sufficient to classify a document.
+
+### AUTOSAR schema
+
+The AUTOSAR-specific schema covers concepts derived from verified document content, including:
+
+* Adaptive applications
+* ARA
+* Functional clusters
+* Platform foundation/services
+* Interfaces
+* Manifests
+
+Relationships include:
+
+```text
+runs_on
+provides_interface
+uses_interface
+belongs_to
+configured_by
+```
+
+Extracted facts retain document and page provenance.
+
+### Real-document validation
+
+Validation was performed against:
+
+**AUTOSAR Explanation of Adaptive Platform Design, R20-11, Document ID 706**
+
+| Check                                      |      Result |
+| ------------------------------------------ | ----------: |
+| Entities extracted                         |      **34** |
+| Facts extracted                            |      **77** |
+| Facts with trusted page/section provenance | **77 / 77** |
+| Validation errors                          |       **0** |
+
+Hand-verified spot checks include section 3.1.1 (ARA), pages 15–16.
+
+There is no gold-standard annotation set for this real AUTOSAR document. Therefore, precision, recall, and F1 are **not claimed** for the real-document validation.
+
+Instead, the validation reports extraction counts, provenance coverage, validation outcomes, and hand-verified checks.
+
+---
+
+## Results and Evaluation
+
+Quantitative evaluation was performed against the project's controlled synthetic HLD corpus and machine-readable ground truth.
+
+### Retrieval
+
+| Method | Page Hit@5 | Section Hit@5 |     MRR@5 |
+| ------ | ---------: | ------------: | --------: |
+| Hybrid |  **0.867** |     **0.833** | **0.709** |
+| Dense  |      0.800 |         0.700 |     0.658 |
+
+The hybrid retriever outperformed dense-only retrieval across the reported retrieval metrics.
+
+The lexical retriever retained the strongest section Hit@1 result and the lowest measured latency in the comparison.
+
+### Embedding benchmark
+
+| Embedding / Baseline | Page Hit@5 |   Throughput |
+| -------------------- | ---------: | -----------: |
+| all-MiniLM-L6-v2     |      0.800 |  159 texts/s |
+| bge-m3               |      0.867 |    3 texts/s |
+| Hashing baseline     |      0.900 | 3758 texts/s |
+
+These measurements are corpus- and hardware-specific and should not be interpreted as general embedding benchmarks.
+
+### Structured extraction
+
+| Evaluation | Precision | Recall |    F1 |
+| ---------- | --------: | -----: | ----: |
+| Entities   |     1.000 |  1.000 | 1.000 |
+| Facts      |     1.000 |  1.000 | 1.000 |
+
+Provenance accuracy:
+
+**1.000**
+
+The evaluation covered both synthetic HLD revisions:
+
+* 165 and 149 gold entities
+* 200 and 178 gold facts
+
+The deterministic extraction pipeline completed at approximately 17 ms per version on the evaluation corpus.
+
+### Architecture graph
+
+| Evaluation        | Precision | Recall |    F1 |
+| ----------------- | --------: | -----: | ----: |
+| Graph nodes/edges |     1.000 |  1.000 | 1.000 |
+
+Graph provenance correctness:
+
+**1.000**
+
+Registry-to-graph validation reported:
+
+* 0 missing relationships
+* 0 extra relationships
+* 0 duplicate fact keys
+
+Graph construction took approximately 15–50 ms per version on the evaluation corpus.
+
+### Findings
+
+The clean v1.0.0 synthetic baseline produced:
+
+```text
+0 findings
+```
+
+The v1.1.0 revision contained a planted orphan entity, which was detected.
+
+Applicable gold-standard evaluation:
+
+```text
+Precision = 1.000
+Recall    = 1.000
+F1        = 1.000
+```
+
+Other planted defects that required information outside the applicable detector scope were reported as not applicable rather than silently counted as failures or fabricated detections.
+
+### Revision comparison
+
+On the synthetic revision pair:
+
+```text
+Added entities:        0
+Removed entities:     16
+Renamed/changed:       1
+
+Added relationships:   43
+Removed relationships: 65
+
+Potential impacts at depth 1: 974
+```
+
+Applicable gold-standard evaluation:
+
+```text
+Precision = 1.000
+Recall    = 1.000
+F1        = 1.000
+```
+
+### Important evaluation note
+
+The perfect precision/recall/F1 values above are measured against a controlled synthetic corpus with exact ground truth.
+
+They are **not general real-world performance guarantees**.
+
+---
+
+## Synthetic vs. Real Validation
+
+ArchSense deliberately separates controlled evaluation from real-document validation.
+
+### Synthetic corpus
+
+Located under:
+
+```text
+data/sample_docs/
+data/ground_truth/
+```
+
+The synthetic corpus contains two HLD revisions:
+
+* `v1.0.0` — clean baseline
+* `v1.1.0` — revision containing planted architecture defects
+
+Because the entities, facts, relationships, retrieval questions, and planted defects are known exactly, the project can calculate quantitative precision, recall, and F1 scores.
+
+The synthetic corpus does not represent a real vehicle program or proprietary automotive architecture.
+
+### Real AUTOSAR validation
+
+Located under:
+
+```text
+data/external_test/
+```
+
+The real AUTOSAR Adaptive Platform document is used to validate:
+
+* PDF ingestion
+* Retrieval
+* Structured extraction
+* Provenance
+* Architecture graph construction
+* Conservative findings
+
+No gold-standard annotation set was available for this document.
+
+Therefore, the project reports:
+
+* Entity counts
+* Fact counts
+* Provenance coverage
+* Validation errors
+* Hand-verified spot checks
+
+rather than unsupported precision/recall values.
+
+---
+
+## Testing
+
+The completed project has:
+
+**481 automated tests passing**
+
+The default test suite can be executed with:
+
+```bash
+.venv/Scripts/python -m pytest tests/
+```
+
+One optional LLM-model test is deselected by default.
+
+### Application screen validation
+
+The repository also includes a Streamlit AppTest-based screen verification suite:
+
+```bash
+.venv/Scripts/python scripts/verify_app_screens.py
+```
+
+The battery exercises the application screens and validates real UI controls, state transitions, graph rendering, grounded answers, findings, revision comparison, exports, and workspace state.
+
+The current screen-verification battery is not fully green: some assertions reflect the latest UI changes and the Revision Compare screen currently has a rendering issue. The main pytest suite remains fully green with 481 passing tests.
+
+No code-coverage percentage is claimed because coverage is not measured.
+
+---
+
+## Development and Evaluation Commands
+
+The application can be launched using the Quickstart above. The following commands are available for rebuilding and evaluating individual project stages.
+
+### M0 / M1 — Dataset and ingestion
+
+```bash
+.venv/Scripts/python scripts/generate_dataset.py
+.venv/Scripts/python scripts/process_sample_docs.py
+```
+
+### M2 — Retrieval and vector indexing
+
+```bash
+.venv/Scripts/python scripts/build_vector_index.py
+.venv/Scripts/python scripts/build_vector_index.py --model hashing
+
+.venv/Scripts/python scripts/evaluate_retrieval.py
+.venv/Scripts/python scripts/compare_retrieval_modes.py
+.venv/Scripts/python scripts/calibrate_gate.py
+
+.venv/Scripts/python scripts/retrieve_demo.py "door signals" --top-k 5 --version 1.0.0
+```
+
+### M3 — Copilot
 
 ```bash
 .venv/Scripts/python scripts/ask_copilot.py "Which component provides the VehicleSpeed signal?"
-.venv/Scripts/python scripts/ask_copilot.py "What is the brake pressure of the front axle?"   # -> INSUFFICIENT EVIDENCE
-.venv/Scripts/python scripts/ask_copilot.py "..." --json                 # full structured record
-.venv/Scripts/python scripts/ask_copilot.py "..." --provider openrouter  # needs OPENROUTER_API_KEY in .env
+
+.venv/Scripts/python scripts/ask_copilot.py "What is the brake pressure of the front axle?"
+
+.venv/Scripts/python scripts/ask_copilot.py "..." --json
+
+.venv/Scripts/python scripts/ask_copilot.py "..." --provider openrouter
 ```
 
-The pipeline: **hybrid retrieval** (BM25 + dense fused with RRF) →
-**evidence gate** (mechanical refusal when the question has no terminological
-anchor in the corpus) → **grounded context** (rank-ordered evidence blocks) →
-**LLM** (structured JSON, temperature 0) → **mechanical citation validation**
-(evidence IDs resolved against trusted chunk metadata; fabricated IDs
-rejected; quotes extracted, never LLM-written).
+OpenRouter requires an `OPENROUTER_API_KEY` configured locally.
 
-### Retrieval comparison + gate calibration
+### M4 — Structured extraction
 
 ```bash
-.venv/Scripts/python scripts/compare_retrieval_modes.py   # lexical vs dense vs hybrid
-.venv/Scripts/python scripts/calibrate_gate.py            # refusal-threshold grid (one-shot)
-.venv/Scripts/python scripts/retrieve_demo.py "door signals" --top-k 5 --version 1.0.0
-.venv/Scripts/python scripts/build_vector_index.py --model hashing   # zero-download mode
+.venv/Scripts/python scripts/extract_entities.py
+.venv/Scripts/python scripts/extract_entities.py --llm
+.venv/Scripts/python scripts/extract_entities.py --reset
+.venv/Scripts/python scripts/extract_entities.py --json
+
+.venv/Scripts/python scripts/query_entities.py --entities
+.venv/Scripts/python scripts/query_entities.py --entity C-02
+.venv/Scripts/python scripts/query_entities.py --related C-10
+
+.venv/Scripts/python scripts/evaluate_extraction.py
 ```
 
-## M3 RAG architecture
-
-```
-PDF ──(M1 ingestion)──> data/processed/*__processed.json
-        │ page-aware lines + tables + section map (D-008)
-        ▼
-chunker.py ── deterministic section-aware chunks (D-011)
-        │   prose: paragraph split -> ~500-token packs, ~75-token overlap
-        │   tables: standalone linearized chunks (anchor-line attribution, D-012)
-        │   provenance: doc, version, sha256, section, pages, seq, type
-        ▼
-embedder.py ── EmbeddingProvider (D-013)
-        │     default: all-MiniLM-L6-v2 (benchmark D-014); hashing for tests
-        ▼
-vector_store.py ── VectorStore protocol -> ChromaDB (cosine, data/vectors/)
-        │          deterministic chunk IDs -> re-index = upsert, no duplicates
-        ▼
-lexical.py + hybrid.py ── BM25 lexical mirror + dense search (D-016)
-        │   RRF fusion: RRF(d) = Σ 1/(rrf_k + rank(d)), rrf_k=60
-        │   modes: hybrid (default) | dense | lexical
-        ▼
-gate.py ── evidence gate (M3.11, D-019)
-        │   lexical-hit floor + IDF query coverage + agreement
-        │   refuse -> INSUFFICIENT EVIDENCE (no LLM call)
-        ▼
-context.py ── grounded evidence blocks [EVIDENCE E1..En] + rules (M3.7)
-        ▼
-llm/ ── LLMProvider: mock (default) | openrouter | ollama (D-017)
-        │   structured JSON: {answer, evidence_ids, insufficient_evidence}
-        ▼
-citations.py ── mechanical validation (M3.8–M3.10, D-018)
-        │   resolve [En] against trusted chunks; unknown IDs rejected;
-        │   quotes extracted mechanically; metadata never from the LLM
-        ▼
-copilot.py ── CopilotAnswer: answered | insufficient_evidence |
-             provider_failure | validation_failure
-```
-
-**Retrieval comparison (D-020, 30 GT questions, MiniLM):** hybrid beats
-dense-only on every metric (page_hit@5 **0.867** vs 0.800; section_hit@5
-**0.833** vs 0.700; MRR@5 **0.709** vs 0.658) and beats lexical-only at
-K=5 (lexical keeps section_hit@1 and the latency crown at 2.8 ms).
-**Embedding benchmark (D-014):** all-MiniLM-L6-v2 0.800 page-hit@5 at
-159 texts/s · bge-small-en 0.800 @ 41 t/s · e5-small-v2 0.800 @ 49 t/s ·
-bge-m3 0.867 @ 3 t/s · lexical hashing baseline 0.900 @ 3758 t/s.
-Full methodology: `docs/PROJECT_DECISIONS.md` D-014/D-016/D-019/D-020;
-artifacts in `data/evaluation/` (git-ignored).
-
-### Structured extraction (M4, offline by default)
-
-```bash
-.venv/Scripts/python scripts/extract_entities.py                     # both versions, deterministic
-.venv/Scripts/python scripts/extract_entities.py --llm               # + mock LLM pass
-.venv/Scripts/python scripts/extract_entities.py --reset             # clear registry first
-.venv/Scripts/python scripts/extract_entities.py --json              # machine-readable
-.venv/Scripts/python scripts/extract_entities.py --provider openrouter --llm   # real LLM (key needed)
-.venv/Scripts/python scripts/query_entities.py --entities                        # registry counts
-.venv/Scripts/python scripts/query_entities.py --entity C-02                     # one entity
-.venv/Scripts/python scripts/query_entities.py --related C-10                    # facts touching C-10
-.venv/Scripts/python scripts/query_entities.py --fact "component:C-10|provides|interface:IF-13"   # provenance trail
-.venv/Scripts/python scripts/evaluate_extraction.py              # P/R/F1 vs ground truth
-```
-
-The extraction pipeline: **deterministic pass** (table handlers for the
-component catalogue / port tables / signal dictionary / dependency overview,
-plus prose title & provider/consumer patterns — no LLM) → **optional LLM
-pass** (same evidence-ID contract as M3; unknown IDs rejected) →
-**mechanical validation** (evidence resolution, reference/domain/range
-checks, confidence floor) → **normalization + dedupe** (name→ID alias map,
-`subject|predicate|object` dedupe keys) → **SQLite registry** (existing M1
-typed entity tables + `extraction_facts` + audit events).
-
-**Measured on this corpus** (`scripts/evaluate_extraction.py`): entities
-**P=1.000 R=1.000 F1=1.000** and facts **P=1.000 R=1.000 F1=1.000** on
-BOTH HLD versions (165 and 149 gold entities; 200 and 178 gold facts),
-provenance accuracy **1.000**, zero validation issues, ~17 ms per version
-deterministic end-to-end. Report: `data/evaluation/extraction_evaluation.json`.
-
-## M4 extraction architecture
-
-```
-chunks (M2, provenance-carrying)
-    │
-    ├─► deterministic.py ── table handlers + prose patterns (D-023)
-    │      3.1 catalogue -> components · 3.2.x port tables -> ports +
-    │      provides/requires · 4.x titles -> interfaces + provider/consumer
-    │      facts · 5 dictionary -> signals + carries · 6.1/6.2 ->
-    │      dependencies + depends_on · 7.x -> flows + participates_in
-    │      (owner attribution via the section-4 provider map — page-flowed
-    │       tables are NOT owned by the nearest preceding title, D-012 lesson)
-    │
-    ├─► context.py ── evidence blocks [EVIDENCE E1..En] + trusted map (M4.6)
-    │      └─ llm.py ── structured JSON {entities, facts} via M3 providers
-    │            (mock default; openrouter/ollama via config; unknown
-    │             evidence IDs rejected — never trusted provenance)
-    │
-    ▼
-validator.py ── mechanical validation (M4.7, D-022)
-    │   evidence resolution · reference existence · domain/range checks ·
-    │   confidence floor · deterministic dedupe (best confidence wins)
-    ▼
-registry.py ── SQLite (M4.10/M4.11)
-    │   M1 typed tables (components/interfaces/ports/signals/
-    │   dependencies/functional_flows) + extraction_facts (uniform,
-    │   dedupe-keyed) + AnalysisRun + append-only audit events
-    ▼
-query_entities.py ── queryable structured knowledge with full traceability:
-    fact -> chunk -> document -> version -> section -> page
-```
-
-### Architecture Graph Explorer (M5, fully offline)
+### M5 — Architecture graph
 
 ```bash
 .venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --stats
@@ -208,255 +930,478 @@ query_entities.py ── queryable structured knowledge with full traceability:
 .venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --type component
 .venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --confidence 0.95
 .venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --node C-02 --depth 1
-.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --render          # pyvis HTML -> data/exports/
-.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --json           # node-link JSON -> data/graphs/
+
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --render
+.venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --json
 .venv/Scripts/python scripts/graph_explorer.py --version 1.0.0 --export-graphml
-.venv/Scripts/python scripts/evaluate_graph.py                   # P/R/F1 vs ground truth, both versions
+
+.venv/Scripts/python scripts/evaluate_graph.py
 ```
 
-Example (`--stats --related C-02 --path C-02 IF-01` on v1.0.0):
-
-```
-== graph v1.0.0 ==
-  nodes: 165  edges: 200  (build 46.2 ms)
-  nodes by type: component=20, interface=25, port=57, signal=34, dependency=24, functional_flow=5
-  edges by predicate: carries=34, depends_on=24, implements=57, participates_in=28, provides=25, requires=32
-== related: component:C-02 (component) — 11 relationships
-  component:C-02 -[depends_on]-> component:C-08   conf=0.95  ABC_HLD_v1.0.0.pdf s6.1 p14 chunk 7ca59d9a5ce9
-  component:C-02 -[provides]-> interface:IF-03    conf=0.90  ABC_HLD_v1.0.0.pdf s4.3 p9  chunk 629161b96e98
-  ...
-== path: component:C-02 -> component:C-08 -> interface:IF-01
-```
-
-The graph is **derived, never authored** (D-026): nodes come from the M4
-typed registry tables, edges 1:1 from `extraction_facts` rows keyed by
-`fact_key` (a `MultiDiGraph`, so distinct facts never collapse, D-027).
-Every edge carries the trusted provenance snapshot (document, version,
-section, page range, chunk id, confidence, extractor) rendered into the
-pyvis edge popup — hover any relationship to see exactly which document
-page supports it (D-028). Graphs are strictly version-scoped
-(`--version 1.0.0` vs `--version 1.1.0`, D-029).
-
-**Measured** (`scripts/evaluate_graph.py`): nodes and edges
-**P=R=F1=1.000 on both versions** (165/200 and 149/178 expected), version
-isolation clean, provenance correctness **1.000**, registry↔graph 1:1
-(0 missing, 0 extra, 0 duplicate fact keys), build ≈ 15–50 ms per version.
-Report: `data/evaluation/graph_evaluation.json`.
-
-### Architecture Findings (M6, fully offline, no LLM)
+### M6 — Findings
 
 ```bash
-.venv/Scripts/python scripts/analyze_findings.py --version 1.0.0             # summary
-.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --persist   # store (idempotent)
-.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --json      # machine-readable
-.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --persist --reset
+.venv/Scripts/python scripts/analyze_findings.py --version 1.0.0
+.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --persist
+.venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --json
 .venv/Scripts/python scripts/analyze_findings.py --version 1.1.0 --finding-type orphan_entity
-.venv/Scripts/python scripts/evaluate_findings.py                            # P/R/F1 vs planted defects
+
+.venv/Scripts/python scripts/evaluate_findings.py
 .venv/Scripts/python scripts/evaluate_findings.py --json
 ```
 
-Example (`--version 1.1.0`):
-
-```
-Version: 1.1.0
-Entities analyzed: 149
-Facts analyzed:    178
-Findings: 1
-
-By type:
-  UNDEFINED_REFERENCE: 0
-  DANGLING_REQUIRES: 0
-  DUPLICATE_INTERFACE: 0
-  CONFLICTING_PROVIDERS: 0
-  ORPHAN_ENTITY: 1
-  UNCONSUMED_SIGNAL: 0
-
-[medium] M6-ORPHAN-ed409bb95a
-  orphan_entity: Orphan entity component:C-05
-  Entity component:C-05 ('SeatAdjustSWC') has degree 0 in the v1.1.0 architecture graph ...
-  evidence: 1 item(s), source: ABC_HLD_v1.1.0.pdf 3.1 p4
-```
-
-Findings are **deterministically detected from structured architecture
-facts** — six rule families over the M4 registry + M5 graph (undefined
-references, dangling requires, duplicate interfaces, conflicting providers,
-orphan entities, unconsumed signals; exact rules in D-032). Every finding
-carries a deterministic ID (`M6-<TYPE>-<hash>`), trusted provenance copied
-verbatim from registry metadata, and rule-based confidence. Persistence
-reuses the M1 `AnalysisRun`/`Finding` tables: re-runs are idempotent and
-preserve human review status (D-034). What a finding is NOT: a semantic
-judgment — the LLM plays no role in detection, and severity/confidence are
-rule tiers, not safety ratings.
-
-**Measured** (`scripts/evaluate_findings.py`): v1.0.0 is a clean baseline
-(0 findings); v1.1.0 detects the planted D4 orphan (C-05) with
-**P = R = F1 = 1.000** on applicable gold. The other planted defects are
-prose-vs-structure or cross-version and are reported as not-applicable
-with reasons (D-035) — never silently skipped, never fabricated.
-
-## M8 Streamlit application (offline by default)
-
-```bash
-.venv/Scripts/python -m streamlit run app/main.py         # http://localhost:8501
-```
-
-Seven screens share one workspace state (selected version drives Document
-Workspace, Architecture Explorer, Copilot and Findings; D-043 clears stale
-selections on version change):
-
-- **Dashboard** — document/version stats (pages, chunks, entities/facts,
-  findings) and navigation cards.
-- **Document Workspace** — page preview (PyMuPDF SVG, page-level
-  provenance; no fabricated coordinates), section map, indexed chunk text.
-- **Architecture Explorer** — M5 graph via PyVis (offline, embedded
-  resources), entity-type/predicate/confidence filters, entity search,
-  entity details with per-relationship provenance, relationship-table
-  fallback.
-- **Copilot** — M3 grounded Q&A with citations; version-scoped retrieval
-  (hybrid lexical+dense, D-046 fix keeps the lexical leg version-pure);
-  provider picker (mock default; OpenRouter/Ollama give actionable error
-  messages, no key ever displayed).
-- **Findings** — v1.0.0 is a clean baseline; v1.1.0 shows the deterministic
-  `orphan_entity` finding with trusted M4 provenance; fresh runs are
-  explicit, persisted findings are read-only (review mutation not exposed
-  yet).
-- **Revision Compare** — M7 diff + impact analysis (0 added / 16 removed /
-  1 changed entities, +43/-65 relationships for 1.0.0→1.1.0); impacts are
-  always labelled *potentially* impacted; depth is configurable.
-- **Export & Report** — deterministic JSON report + findings/changes/
-  impacts CSV downloads (sections 1–9, no secrets, D-045).
-
-UI-agnostic service adapters (`app/services/`) wrap M1–M7 facades; the UI
-never re-implements backend logic (D-041). Screen-level verification:
-`.venv/Scripts/python scripts/verify_app_screens.py` (61 checks via
-Streamlit AppTest).
-
-## M7 revision compare (fully offline, no LLM)
+### M7 — Revision comparison
 
 ```bash
 .venv/Scripts/python scripts/compare_revisions.py \
-    --base-version 1.0.0 --target-version 1.1.0          # required pair
+    --base-version 1.0.0 --target-version 1.1.0
+
 .venv/Scripts/python scripts/compare_revisions.py \
     --base-version 1.0.0 --target-version 1.1.0 --depth 2 --json
+
 .venv/Scripts/python scripts/compare_revisions.py \
-    --base-version 1.0.0 --target-version 1.1.0 --persist   # cache run
-.venv/Scripts/python scripts/evaluate_revisions.py --save             # P/R/F1
+    --base-version 1.0.0 --target-version 1.1.0 --persist
+
+.venv/Scripts/python scripts/evaluate_revisions.py --save
 ```
 
-Entity diff runs on canonical M4 keys, relationship diff on fact-triple
-identity, both carrying trusted provenance from the registry (D-037).
-Impact analysis is a deterministic BFS over the version graphs with
-real-edge paths, controlled categories, and configurable depth (D-038);
-every impact path is mechanically re-verified against the graph (V8).
-Changes are changes — findings (e.g. `stale_reference`) arise only from
-explicit deterministic rules. Measured on the synthetic pair: 0 added /
-16 removed / 1 renamed entities, 43 added / 65 removed relationships,
-974 impacts at depth 1 — **P = R = F1 = 1.000** on every applicable gold
-family, with D1 (removed dependency) and D8 (new consumer) detected and
-prose-only defects reported not-applicable with reasons (D-040).
+### M8 — Streamlit application
 
-## M5 graph architecture
-
-```
-SQLite registry (M4: typed tables + extraction_facts)   <- source of truth
-    ▼ builder.py (version-scoped SQL join, D-026)
-MultiDiGraph
-    nodes: component:C-02 ... (typed attrs, confidence, display name)
-    edges: fact_key-keyed, predicate + trusted provenance dict (D-027/D-028)
-    ▼ validation.py (mechanical)   analysis.py (degree/path/components)
-    ▼ filtering.py (type/predicate/confidence/ego-depth, non-mutating)
-    ├─► export.py ── node-link JSON (data/graphs/) + GraphML
-    └─► visualization.py ── pyvis standalone HTML (data/exports/)
-            inlined vis-network (no CDN), UTF-8, provenance edge popups
-    ▼ GraphService (service.py) ── the typed facade for CLI/M6/M7/M8
+```bash
+.venv/Scripts/python -m streamlit run app/main.py
+.venv/Scripts/python scripts/verify_app_screens.py
 ```
 
-## M9 — real AUTOSAR Adaptive Platform support + user uploads
+### M9 — AUTOSAR upload pipeline
 
-ArchSense is no longer limited to the synthetic ABC HLDs:
-
-- **Upload workflow** — the app's **Upload Documents** screen (and
-  `scripts/ingest_upload.py` CLI) accepts PDFs, shows metadata, and runs
-  the full pipeline only on an explicit **Process** action: safe storage
-  (`data/uploads/`, SHA-256, content-dedupe) → M1 ingestion → M2 indexing
-  into an **isolated upload Chroma collection** (main and external-test
-  indexes untouched, D-047) → evidence-based profile detection (D-048)
-  → structured extraction when the profile supports it.
-- **Profiles** — `application_hld` (synthetic ABC schema, full M4–M7),
-  `autosar_adaptive_platform` (dedicated schema, D-049), `generic`
-  (M1–M3 only; no fabricated graph/findings).
-- **Real AUTOSAR validation** — against *AUTOSAR Explanation of Adaptive
-  Platform Design, R20-11, Document ID 706*: **34 entities, 77 facts,
-  77/77 facts with trusted page/section provenance, 0 validation errors**
-  (hand-verified spot checks incl. section 3.1.1 ARA, pp. 15–16; no gold
-  standard exists, so no precision/recall is claimed). The AUTOSAR graph
-  builds through the standard M5 `GraphService` and passes validation;
-  findings run the conservative AUTOSAR detector set (0 findings is a
-  valid, honest result); revision compare requires a second compatible
-  AUTOSAR revision and is refused otherwise (D-050).
-- **Generic PDFs stay safe** — a non-recognized PDF is ingested, indexed
-  and copilot-answerable, and the UI clearly states structured analysis
-  is unavailable instead of showing fake entities/findings.
-
-## Repository layout
-
-```
-backend/
-  dataset/       M0: source-of-truth model, PDF renderer, ground truth
-  ingestion/     M1: parsing, cleaning, sections, tables, OCR hook, pipeline
-  rag/           M2: chunker, embedder, benchmark, vector store, retriever,
-                 indexing, evaluation
-                 M3: lexical (BM25), hybrid (RRF), gate, context, citations,
-                 copilot, llm/ (mock | openrouter | ollama)
-  extraction/    M4: schema, deterministic extractor, LLM extraction,
-                 validator, registry persistence, service, evaluation
-  graph/         M5: MultiDiGraph builder, validation, analysis, filtering,
-                 JSON/GraphML export, pyvis rendering, service, evaluation
-  findings/      M6: finding model, six deterministic detectors, engine,
-                 validator (V1-V10), idempotent persistence, evaluation
-  diff/          M7: two-version context, entity/relationship diff, impact
-                 analysis, revision findings, validation (V1-V9),
-                 CompareRun persistence, evaluation
-  storage/       SQLite schema, sessions, audit log
-  services/      application layer (UI-agnostic business logic)
-  uploads/       M9: safe upload storage, profile detection, upload
-                 pipeline (M1 -> M2 -> profile -> structured extraction)
-  extraction/    M4: deterministic ABC extraction + registry; autosar/
-                 M9: AUTOSAR Adaptive Platform schema + extractor
-app/             Streamlit UI (M8): main router, state, components,
-                 services/ (thin adapters over M1-M7 + report assembly),
-                 screens/ (Dashboard, Document Workspace, Architecture
-                 Explorer, Copilot, Findings, Revision Compare, Export,
-                 Upload Documents)
-scripts/         dataset generation, ingestion, indexing, evaluation,
-                 copilot CLI, gate calibration, extraction + registry CLIs,
-                 graph explorer + graph evaluation,
-                 findings analysis + findings evaluation,
-                 revision compare + revision evaluation,
-                 app screen verification battery (verify_app_screens.py),
-                 upload ingestion CLI (ingest_upload.py)
-tests/           pytest suite (481 tests green at M9; opt-in model tests)
-docs/            decisions, status, architecture, evaluation, demo script
-data/            generated artifacts (gitignored: processed/, vectors/,
-                 evaluation/, db/, graphs/, exports/, uploads/)
+```bash
+.venv/Scripts/python scripts/ingest_upload.py \
+    data/external_test/AUTOSAR_EXP_PlatformDesign.pdf
 ```
 
-## Governance principles (from the case study)
+### Full test suite
 
-- Outputs grounded in approved source documents with page/section citations.
-- Explicit **insufficient-evidence** refusal instead of guessing: a
-  mechanical pre-generation gate refuses questions with no terminological
-  anchor in the corpus; the LLM's structured refusal flag is the second
-  layer; validation rejects uncited answers.
-- Citations are mechanically validated: the model references evidence IDs
-  only; document/version/section/page metadata and quotes come from stored
-  chunks, never from model output.
-- AI-generated findings are *potential* issues; humans accept/reject.
-- Append-only audit trail for every consequential action.
-- Fully local storage; LLM access is via a single provider abstraction
-  (OpenRouter primary, local Ollama fallback, deterministic mock offline).
+```bash
+.venv/Scripts/python -m pytest tests/
+```
 
-## License / data notice
+---
 
-The HLD corpus in `data/sample_docs/` is **synthetic** — it does not
-represent any real vehicle program or proprietary architecture.
+## Technical Milestones
+
+### M0 / M1 — Synthetic Dataset and Page-aware Ingestion
+
+The project generates two controlled HLD revisions from a source-of-truth architecture model:
+
+* v1.0.0 — clean
+* v1.1.0 — contains planted architecture defects
+
+Machine-readable ground truth is generated for entities, facts, retrieval questions, and defects.
+
+The ingestion pipeline extracts:
+
+* Per-page text
+* Tables
+* Headings
+* Section maps
+* Document metadata
+* Line-level provenance
+
+It also includes an OCR fallback hook for scanned pages.
+
+---
+
+### M2 / M3 — Retrieval and Cited RAG Copilot
+
+The retrieval pipeline uses deterministic section-aware chunking.
+
+Prose is grouped into approximately 500-token packs with overlap, while tables are represented as standalone linearized chunks.
+
+Each chunk retains provenance including:
+
+* Document
+* Version
+* SHA-256
+* Section
+* Pages
+* Sequence
+* Content type
+
+The default dense embedding model is `all-MiniLM-L6-v2`.
+
+A hashing embedding mode is available for zero-download testing.
+
+Retrieval supports:
+
+* Hybrid
+* Dense
+* Lexical
+
+Hybrid retrieval uses Reciprocal Rank Fusion with:
+
+```text
+rrf_k = 60
+```
+
+The evidence gate checks whether a question is sufficiently supported before invoking an LLM.
+
+The copilot supports:
+
+* Deterministic mock provider
+* OpenRouter
+* Ollama
+
+Citation validation ensures that model-generated evidence references resolve to trusted chunks.
+
+---
+
+### M4 — Structured Extraction and SQLite Registry
+
+Structured extraction uses deterministic table handlers and prose patterns.
+
+The pipeline supports entities and relationships such as:
+
+* Components
+* Interfaces
+* Ports
+* Signals
+* Dependencies
+* Functional flows
+
+An optional LLM extraction path can operate under the same evidence contract.
+
+Before persistence, extracted facts are checked for:
+
+* Evidence validity
+* Reference existence
+* Domain/range validity
+* Confidence threshold
+* Duplicate facts
+
+The resulting structured architecture is persisted in SQLite with provenance and audit information.
+
+Measured on the synthetic evaluation corpus:
+
+```text
+Entities:
+P = 1.000
+R = 1.000
+F1 = 1.000
+
+Facts:
+P = 1.000
+R = 1.000
+F1 = 1.000
+
+Provenance accuracy = 1.000
+```
+
+---
+
+### M5 — Architecture Graph Explorer
+
+The architecture graph is derived directly from the structured registry.
+
+```text
+SQLite Registry
+      │
+      ▼
+Graph Builder
+      │
+      ▼
+NetworkX MultiDiGraph
+      │
+      ├── Filtering
+      ├── Analysis
+      ├── Path exploration
+      ├── JSON export
+      ├── GraphML export
+      └── PyVis visualization
+```
+
+Graph nodes represent architecture entities.
+
+Graph edges represent architecture facts.
+
+Each relationship retains trusted provenance.
+
+Graphs are strictly version-scoped.
+
+On the synthetic corpus:
+
+```text
+Nodes/edges:
+P = 1.000
+R = 1.000
+F1 = 1.000
+
+Provenance correctness = 1.000
+```
+
+---
+
+### M6 — Deterministic Architecture Findings
+
+The findings engine uses deterministic rule families over the architecture registry and graph.
+
+Supported finding categories include:
+
+* Undefined references
+* Dangling requirements
+* Duplicate interfaces
+* Conflicting providers
+* Orphan entities
+* Unconsumed signals
+
+Each finding contains:
+
+* Deterministic ID
+* Finding type
+* Provenance
+* Rule-based confidence
+* Human-review status
+
+On the synthetic v1.1.0 revision, the planted orphan entity was detected with:
+
+```text
+Precision = 1.000
+Recall    = 1.000
+F1        = 1.000
+```
+
+---
+
+### M7 — Revision Comparison and Impact Analysis
+
+Revision comparison uses canonical entity keys and fact identity to determine architecture changes.
+
+The system identifies:
+
+* Added entities
+* Removed entities
+* Renamed/changed entities
+* Added relationships
+* Removed relationships
+
+Potential impact is determined through graph traversal with configurable depth.
+
+Every impact path is verified against the architecture graph.
+
+On the synthetic revision pair:
+
+```text
+Added entities:        0
+Removed entities:     16
+Renamed/changed:       1
+
+Added relationships:   43
+Removed relationships: 65
+
+Potential impacts at depth 1: 974
+```
+
+Applicable gold-standard evaluation:
+
+```text
+Precision = 1.000
+Recall    = 1.000
+F1        = 1.000
+```
+
+---
+
+### M8 — Streamlit Application
+
+The Streamlit interface integrates the M1–M7 services into a unified engineering workspace.
+
+The application provides:
+
+* Shared document/version state
+* Document workspace
+* Architecture graph exploration
+* Grounded Copilot
+* Findings
+* Revision comparison
+* Report export
+
+The UI uses service adapters so that application screens consume the underlying analysis services rather than reimplementing the architecture logic.
+
+---
+
+### M9 — AUTOSAR Adaptive Platform Profile and Uploads
+
+M9 adds real AUTOSAR Adaptive Platform document support and user PDF uploads.
+
+The upload pipeline performs:
+
+```text
+Upload
+  ↓
+Safe storage
+  ↓
+SHA-256 content deduplication
+  ↓
+Page-aware ingestion
+  ↓
+Isolated vector indexing
+  ↓
+Evidence-based profile detection
+  ↓
+Structured extraction when supported
+```
+
+Supported profiles include:
+
+```text
+application_hld
+autosar_adaptive_platform
+generic
+```
+
+Generic documents receive ingestion, retrieval, and Q&A capabilities only.
+
+The system does not fabricate structured architecture analysis for unsupported document types.
+
+---
+
+## Repository Structure
+
+```text
+ArchSense/
+│
+├── backend/
+│   ├── dataset/          # Synthetic HLD generation and ground truth
+│   ├── ingestion/        # PDF parsing and page-aware ingestion
+│   ├── rag/              # Chunking, embeddings, retrieval and RAG
+│   ├── extraction/       # Structured architecture extraction
+│   │   └── autosar/      # AUTOSAR Adaptive Platform support
+│   ├── graph/            # Architecture graph construction and analysis
+│   ├── findings/         # Deterministic architecture findings
+│   ├── diff/             # Revision comparison and impact analysis
+│   ├── uploads/          # User upload pipeline
+│   └── storage/          # SQLite schema, sessions and audit log
+│
+├── app/
+│   ├── components/       # Shared UI components
+│   ├── services/         # UI-facing service adapters
+│   └── screens/          # Streamlit application screens
+│
+├── scripts/
+│   ├── Dataset generation
+│   ├── Ingestion
+│   ├── Retrieval evaluation
+│   ├── Copilot CLI
+│   ├── Structured extraction
+│   ├── Graph exploration
+│   ├── Findings analysis
+│   ├── Revision comparison
+│   ├── Screen verification
+│   └── AUTOSAR upload ingestion
+│
+├── tests/                # Automated test suite
+│
+├── docs/
+│   ├── PROJECT_DECISIONS.md
+│   └── IMPLEMENTATION_STATUS.md
+│
+├── data/
+│   ├── sample_docs/      # Synthetic HLD documents
+│   ├── ground_truth/     # Synthetic evaluation ground truth
+│   └── external_test/    # Real AUTOSAR validation document
+│
+├── requirements.txt
+└── README.md
+```
+
+Generated runtime artifacts such as processed documents, vector stores, evaluation results, databases, graphs, exports, and uploads are stored under git-ignored `data/` directories.
+
+---
+
+## Governance and Responsible AI
+
+ArchSense is designed around evidence traceability and human review.
+
+### Grounded answers
+
+Copilot responses are grounded in approved source documents and include evidence references.
+
+### Explicit refusal
+
+Questions without sufficient corpus evidence can be rejected before LLM generation rather than answered through unsupported guessing.
+
+### Citation validation
+
+Document/version/section/page metadata comes from stored document chunks.
+
+The LLM supplies evidence IDs rather than authoritative document metadata.
+
+### Human review
+
+Architecture findings are presented as potential issues for engineering review.
+
+They are not treated as automatic engineering decisions or safety certification.
+
+### Auditability
+
+The architecture registry maintains audit information for consequential analysis operations.
+
+### Local-first architecture
+
+Structured data is stored locally in SQLite and vectors are stored in a local ChromaDB directory.
+
+LLM access is abstracted behind a provider interface supporting:
+
+* Deterministic mock
+* OpenRouter
+* Ollama
+
+### Unsupported documents
+
+Generic documents are clearly identified as unsupported for structured architecture analysis instead of generating fabricated architecture entities or findings.
+
+---
+
+## Limitations
+
+* The synthetic evaluation corpus is controlled and does not represent a production vehicle program.
+* Perfect synthetic precision/recall/F1 values reflect exact ground truth and should not be interpreted as general real-world performance.
+* The real AUTOSAR document does not have a gold-standard annotation set, so precision/recall/F1 are not claimed for that validation.
+* LLM-assisted Copilot answers and optional extraction remain subject to human review.
+* Generic PDFs support ingestion, retrieval, and Q&A, but structured architecture analysis is available only for supported profiles.
+* Architecture findings are conservative deterministic checks and are not safety certification.
+* Impact analysis identifies potentially impacted elements through graph relationships; it does not guarantee that an engineering change will affect those elements.
+* Revision comparison requires two compatible versions of the same document/profile.
+* The Streamlit AppTest screen-verification battery currently contains some stale UI assertions and a Revision Compare rendering issue. The main automated pytest suite remains fully green with 481 passing tests.
+
+---
+
+## License and Data Notice
+
+The HLD corpus under:
+
+```text
+data/sample_docs/
+```
+
+is **synthetic** and does not represent a real vehicle program or proprietary architecture.
+
+The real AUTOSAR document under:
+
+```text
+data/external_test/
+```
+
+is used solely for local validation of the AUTOSAR Adaptive Platform workflow.
+
+No software license file is currently included with this pilot repository.
+
+---
+
+## Author
+
+**Aarya Yadav**
+
+B.Tech — Computer Engineering, AI & Data Science
+MIT World Peace University, Pune
+
+Built as part of the **Tata Pulse / Tata Technologies Case Study 1 pilot**.
